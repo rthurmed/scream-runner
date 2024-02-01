@@ -21,8 +21,8 @@ const main = async ({ debug = true }) => {
   k.setGravity(2400);
   
   k.add([
-    k.pos(0, GAME_HEIGHT - FLOOR_SIZE),
-    k.rect(GAME_WIDTH, FLOOR_SIZE),
+    k.pos(0, k.height() - FLOOR_SIZE),
+    k.rect(k.width(), FLOOR_SIZE),
     k.color(k.Color.BLACK),
     k.area(),
     k.body({
@@ -37,11 +37,18 @@ const main = async ({ debug = true }) => {
     k.body()
   ]);
 
+  const volumeDisplay = k.add([
+    k.pos(k.width() - 10, k.height() - 10),
+    k.rect(30, 100),
+    k.anchor("botright"),
+    k.color(k.Color.RED)
+  ]);
+
   const microphone = await Microphone();
 
   k.loop(1/30, () => {
     const micVolume = microphone.getVolume();
-    console.log(micVolume);
+    volumeDisplay.height = micVolume * 80;
   });
 }  
 
