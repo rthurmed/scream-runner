@@ -40,7 +40,8 @@ const main = async ({ debug = true }) => {
   const microphone = await Microphone();
 
   k.loop(1/30, () => {
-    console.log(microphone.getLevel());
+    const micVolume = microphone.getVolume();
+    console.log(micVolume);
   });
 }  
 

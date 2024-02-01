@@ -17,19 +17,18 @@ export const Microphone = async () => {
     analyser.fftSize = ANALYSER_FFT;
 
     const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
+    const dataArray = new Float32Array(bufferLength);
 
     source.connect(analyser);
 
-    const getLevel = () => {
-      analyser.getByteTimeDomainData(dataArray);
+    const getVolume = () => {
+      analyser.getFloatTimeDomainData(dataArray);
       const maxInput = Math.max(...dataArray);
-      const value = maxInput - ANALYSER_BASE;
-      return value
+      return maxInput;
     }
 
     return {
-      getLevel
+      getVolume
     }
   } catch (error) {
     console.log("Unable to initialize microphone module. The following error occured: " + error);
