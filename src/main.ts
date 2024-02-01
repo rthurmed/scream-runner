@@ -6,6 +6,8 @@ const GAME_WIDTH = 800;
 const GAME_GRAVITY = 1600;
 const GAME_BACKGROUND = [164, 209, 250];
 const FLOOR_SIZE = 100;
+const MIC_LEVEL_1 = .2;
+const MIC_LEVEL_2 = .85;
 
 const main = async ({ debug = true }) => {
   const k = kaboom({
@@ -14,13 +16,18 @@ const main = async ({ debug = true }) => {
     background: GAME_BACKGROUND
   });
   
+  // sprites
+  k.loadSprite('bean', '/sprites/bean.png');
+
+  // game configs
+  k.setGravity(2400);
   k.debug.inspect = debug;
   
-  k.loadSprite('bean', '/sprites/bean.png');
+  // modules
+  const microphone = await Microphone();
   
-  k.setGravity(2400);
-  
-  k.add([
+  // entities
+  const floor = k.add([
     k.pos(0, k.height() - FLOOR_SIZE),
     k.rect(k.width(), FLOOR_SIZE),
     k.color(k.Color.BLACK),
@@ -38,17 +45,52 @@ const main = async ({ debug = true }) => {
   ]);
 
   const volumeDisplay = k.add([
-    k.pos(k.width() - 10, k.height() - 10),
-    k.rect(30, 100),
+    k.pos(k.width() - 12, k.height() - 10),
+    k.rect(30, 80),
     k.anchor("botright"),
     k.color(k.Color.RED)
   ]);
 
-  const microphone = await Microphone();
+  {
+    // rulers
+    const ruler3 = k.add([
+      k.pos(k.width() - 10, k.height() - 10),
+      k.rect(2, 80),
+      k.anchor("botright"),
+      k.color(k.Color.RED)
+    ]);
+  
+    const ruler2 = k.add([
+      k.pos(k.width() - 10, k.height() - 10),
+      k.rect(2, 80 * MIC_LEVEL_2),
+      k.anchor("botright"),
+      k.color(k.Color.fromArray([255, 101, 0]))
+    ]);
+  
+    const ruler1 = k.add([
+      k.pos(k.width() - 10, k.height() - 10),
+      k.rect(2, 80 * MIC_LEVEL_1),
+      k.anchor("botright"),
+      k.color(k.Color.YELLOW)
+    ]);
+  }
 
   k.loop(1/30, () => {
     const micVolume = microphone.getVolume();
     volumeDisplay.height = micVolume * 80;
+
+    const walking = micVolume > MIC_LEVEL_1;
+    const tryingToJump = micVolume > MIC_LEVEL_2;
+    
+    let targetX = 100;
+    if (walking) {
+      targetX = 10 + micVolume * 600;
+    }
+    player.pos.x = k.lerp(player.pos.x, targetX, k.dt() * 8);
+    
+    if (tryingToJump && player.isGrounded()) {
+      player.jump()
+    }
   });
 }  
 
