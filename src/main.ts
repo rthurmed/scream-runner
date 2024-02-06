@@ -3,17 +3,19 @@ import { Microphone } from "./microphone";
 
 const GAME_HEIGHT = 600;
 const GAME_WIDTH = 800;
-const GAME_GRAVITY = 1600;
+const GAME_GRAVITY = 2400;
 const GAME_BACKGROUND = [164, 209, 250];
 const GAME_FPS = 30;
 const GAME_TICK = 1/GAME_FPS;
 const FLOOR_SIZE = 100;
 const MIC_LEVEL_1 = .15;
-const MIC_LEVEL_2 = .6;
-const PLAYER_JUMP_STRENGTH = 1000;
+const MIC_LEVEL_2 = .4;
+const MIC_LEVEL_3 = .6;
+const PLAYER_JUMP_STRENGTH = 1200;
 const PLAYER_MIN_POSITION = 100;
+const PLAYER_WALK_POSITION = PLAYER_MIN_POSITION + 200;
 const PLAYER_MAX_POSITION = PLAYER_MIN_POSITION + 400;
-const PLAYER_SPEED = 1000;
+const PLAYER_SPEED = 600;
 const VOLUME_RAISE = GAME_TICK * 16;
 const VOLUME_DECAY = GAME_TICK * 1;
 
@@ -29,12 +31,12 @@ const main = async ({ debug = true }) => {
   k.loadSprite('bean', '/sprites/bean.png');
 
   // game configs
-  k.setGravity(2400);
+  k.setGravity(GAME_GRAVITY);
   k.debug.inspect = debug;
   
   // modules
   const microphone = await Microphone();
-  
+
   // entities
   const floor = k.add([
     k.pos(0, k.height() - FLOOR_SIZE),
@@ -52,8 +54,46 @@ const main = async ({ debug = true }) => {
     k.area(),
     k.body({
       mass: .5
-    })
+    }),
+    k.state("idle", ["idle", "walk", "run"]),
+    {
+      destX: PLAYER_MIN_POSITION,
+      updateState(volume: number) {
+        if (this.state == "idle") {
+          if (volume > MIC_LEVEL_1) {
+            this.enterState("walk");
+          }
+        }
+    
+        if (this.state == "walk") {
+          if (volume < MIC_LEVEL_1) {
+            this.enterState("idle");
+          }
+          if (volume > MIC_LEVEL_2) {
+            this.enterState("run");
+          }
+        }
+    
+        if (this.state == "run") {
+          if (volume < MIC_LEVEL_2) {
+            this.enterState("walk");
+          }
+        }
+      }
+    }
   ]);
+
+  player.onStateEnter("idle", () => {
+    player.destX = PLAYER_MIN_POSITION;
+  });
+
+  player.onStateEnter("walk", () => {
+    player.destX = PLAYER_WALK_POSITION;
+  });
+
+  player.onStateEnter("run", () => {
+    player.destX = PLAYER_MAX_POSITION;
+  });
 
   const volumeDisplay = k.add([
     k.pos(k.width() - 12, k.height() - 10),
@@ -63,65 +103,43 @@ const main = async ({ debug = true }) => {
   ]);
 
   {
+    const darkRed = k.Color.fromArray([179, 9, 0]);
+    const red = k.Color.RED;
+    const orange = k.Color.fromArray([255, 101, 0]);
+    const yellow = k.Color.YELLOW;
+    
+    const rulerTemplate = [
+      k.pos(k.width() - 10, k.height() - 10),
+      k.anchor("botright"),
+    ]
+
     // rulers
-    const ruler3 = k.add([
-      k.pos(k.width() - 10, k.height() - 10),
-      k.rect(2, 80),
-      k.anchor("botright"),
-      k.color(k.Color.RED)
-    ]);
-  
-    const ruler2 = k.add([
-      k.pos(k.width() - 10, k.height() - 10),
-      k.rect(2, 80 * MIC_LEVEL_2),
-      k.anchor("botright"),
-      k.color(k.Color.fromArray([255, 101, 0]))
-    ]);
-  
-    const ruler1 = k.add([
-      k.pos(k.width() - 10, k.height() - 10),
-      k.rect(2, 80 * MIC_LEVEL_1),
-      k.anchor("botright"),
-      k.color(k.Color.YELLOW)
-    ]);
+    k.add([...rulerTemplate, k.color(darkRed), k.rect(2, 80)]);
+    k.add([...rulerTemplate, k.color(red),     k.rect(2, 80 * MIC_LEVEL_3)]);
+    k.add([...rulerTemplate, k.color(orange),  k.rect(2, 80 * MIC_LEVEL_2)]);
+    k.add([...rulerTemplate, k.color(yellow),  k.rect(2, 80 * MIC_LEVEL_1)]);
   }
 
   let volume = 0;
-  let wasWalking = false;
-  let destX = player.pos.x;
 
   k.loop(GAME_TICK, () => {
     // manage volume
-    const from = volume;
-    const to = microphone.getVolume();
-    const speed = to > from ? VOLUME_RAISE : VOLUME_DECAY;
-
-    volume = k.lerp(from, to, speed);
+    const rawVolume = microphone.getVolume();
+    const speed = rawVolume > volume ? VOLUME_RAISE : VOLUME_DECAY;
+    volume = k.lerp(volume, rawVolume, speed);
 
     // update volume display
     volumeDisplay.height = volume * 80;
 
-    // player stuff
-    const walking = volume > MIC_LEVEL_1;
+    // player movement
+    player.updateState(volume);
+    player.moveTo(player.destX, player.pos.y, PLAYER_SPEED);
+
+    // player jump
     const tryingToJump = volume > MIC_LEVEL_2;
-    const justStartedWalking = !wasWalking && walking;
-    const justStoppedWalking = wasWalking && !walking;
-
-    if (justStartedWalking) {
-      destX = PLAYER_MAX_POSITION;
-    }
-
-    if (justStoppedWalking) {
-      destX = PLAYER_MIN_POSITION;
-    }
-
-    player.moveTo(destX, player.pos.y, PLAYER_SPEED);
-    
     if (tryingToJump && player.isGrounded()) {
       player.jump(PLAYER_JUMP_STRENGTH);
     }
-
-    wasWalking = walking;
   });
 }  
 
