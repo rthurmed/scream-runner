@@ -8,10 +8,10 @@ const GAME_BACKGROUND = [164, 209, 250];
 const GAME_UPDATE_TIME = 1/30;
 const FLOOR_SIZE = 100;
 const MIC_LEVEL_1 = .15;
-const MIC_LEVEL_2 = .4; // .85;
+const MIC_LEVEL_2 = .6;
 const PLAYER_JUMP_STRENGTH = 1000;
-const PLAYER_SPEED = 600;
-const PLAYER_START_POSITION = 100;
+const PLAYER_MIN_POSITION = 100;
+const PLAYER_MAX_POSITION = PLAYER_MIN_POSITION + 400;
 
 const main = async ({ debug = true }) => {
   const k = kaboom({
@@ -45,7 +45,9 @@ const main = async ({ debug = true }) => {
     k.sprite('bean'),
     k.pos(100, 100),
     k.area(),
-    k.body()
+    k.body({
+      mass: .5
+    })
   ]);
 
   const volumeDisplay = k.add([
@@ -82,10 +84,15 @@ const main = async ({ debug = true }) => {
   let volume = 0;
 
   k.loop(GAME_UPDATE_TIME, () => {
-    const inputedVolume = microphone.getVolume();
-    volume = k.lerp(volume, inputedVolume, GAME_UPDATE_TIME * 8);
-    
-    console.log(volume);
+    const VOLUME_RAISE = GAME_UPDATE_TIME * 16;
+    const VOLUME_DECAY = GAME_UPDATE_TIME * 1;
+    const PLAYER_LERP_SPEED = GAME_UPDATE_TIME * 2
+
+    const from = volume;
+    const to = microphone.getVolume();
+    const speed = to > from ? VOLUME_RAISE : VOLUME_DECAY;
+
+    volume = k.lerp(from, to, speed);
 
     // update volume display
     volumeDisplay.height = volume * 80;
@@ -93,11 +100,8 @@ const main = async ({ debug = true }) => {
     const walking = volume > MIC_LEVEL_1;
     const tryingToJump = volume > MIC_LEVEL_2;
     
-    let targetX = PLAYER_START_POSITION;
-    if (walking) {
-      targetX = PLAYER_START_POSITION + volume * PLAYER_SPEED;
-    }
-    player.pos.x = k.lerp(player.pos.x, targetX, k.dt() / 2);
+    const targetX = walking ? PLAYER_MAX_POSITION : PLAYER_MIN_POSITION;
+    player.pos.x = k.lerp(player.pos.x, targetX, PLAYER_LERP_SPEED);
     
     if (tryingToJump && player.isGrounded()) {
       player.jump(PLAYER_JUMP_STRENGTH);
