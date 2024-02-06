@@ -18,11 +18,15 @@ const PLAYER_MAX_POSITION = PLAYER_MIN_POSITION + 400;
 const PLAYER_SPEED = 600;
 const VOLUME_RAISE = GAME_TICK * 16;
 const VOLUME_DECAY = GAME_TICK * 1;
+const ENEMY_FALLING_Y = 10;
+const ENEMY_AIM_OPACITY = .5;
+const ENEMY_ATTACK_TIMEOUT = 3;
 
 export const addPlayer = (k: KaboomCtx) => {
   const player = k.add([
     "player",
-    k.sprite('bean'),
+    k.sprite("bean"),
+    k.anchor("bot"),
     k.pos(100, 100),
     k.area(),
     k.body({
@@ -68,7 +72,37 @@ export const addPlayer = (k: KaboomCtx) => {
     player.destX = PLAYER_MAX_POSITION;
   });
 
+  player.onCollide("projectile", (projectile, collision) => {
+    k.addKaboom(player.pos);
+    projectile.destroy();
+  });
+
   return player;
+}
+
+export const addFallingEnemy = (k: KaboomCtx, x: number) => {
+  const aim = k.add([
+    k.pos(x, ENEMY_FALLING_Y),
+    k.sprite("bomb"),
+    k.anchor("top"),
+    k.opacity(ENEMY_AIM_OPACITY),
+  ]);
+
+  k.wait(ENEMY_ATTACK_TIMEOUT, () => {
+    aim.destroy();
+    const projectile = k.add([
+      "enemy",
+      "projectile",
+      k.pos(x, ENEMY_FALLING_Y),
+      k.sprite("bomb"),
+      k.anchor("top"),
+      k.area({ collisionIgnore: ["structure"] }),
+      k.body(),
+      k.offscreen({ destroy: true }),
+    ]);
+  });
+
+  return aim;
 }
 
 const main = async ({ debug = true }) => {
@@ -80,7 +114,8 @@ const main = async ({ debug = true }) => {
   });
   
   // sprites
-  k.loadSprite('bean', '/sprites/bean.png');
+  k.loadSprite("bean", "/sprites/bean.png");
+  k.loadSprite("bomb", "/sprites/bomb.png");
 
   // game configs
   k.setGravity(GAME_GRAVITY);
@@ -91,6 +126,7 @@ const main = async ({ debug = true }) => {
 
   // entities
   const floor = k.add([
+    "structure",
     k.pos(0, k.height() - FLOOR_SIZE),
     k.rect(k.width(), FLOOR_SIZE),
     k.color(k.Color.BLACK),
@@ -126,6 +162,9 @@ const main = async ({ debug = true }) => {
     k.add([...rulerTemplate, k.color(orange),  k.rect(2, 80 * MIC_LEVEL_2)]);
     k.add([...rulerTemplate, k.color(yellow),  k.rect(2, 80 * MIC_LEVEL_1)]);
   }
+
+  // TODO: spawn pattern
+  addFallingEnemy(k, PLAYER_WALK_POSITION);
 
   let volume = 0;
 
