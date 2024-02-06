@@ -5,9 +5,13 @@ const GAME_HEIGHT = 600;
 const GAME_WIDTH = 800;
 const GAME_GRAVITY = 1600;
 const GAME_BACKGROUND = [164, 209, 250];
+const GAME_UPDATE_TIME = 1/30;
 const FLOOR_SIZE = 100;
-const MIC_LEVEL_1 = .2;
-const MIC_LEVEL_2 = .85;
+const MIC_LEVEL_1 = .15;
+const MIC_LEVEL_2 = .4; // .85;
+const PLAYER_JUMP_STRENGTH = 1000;
+const PLAYER_SPEED = 600;
+const PLAYER_START_POSITION = 100;
 
 const main = async ({ debug = true }) => {
   const k = kaboom({
@@ -75,21 +79,28 @@ const main = async ({ debug = true }) => {
     ]);
   }
 
-  k.loop(1/30, () => {
-    const micVolume = microphone.getVolume();
-    volumeDisplay.height = micVolume * 80;
+  let volume = 0;
 
-    const walking = micVolume > MIC_LEVEL_1;
-    const tryingToJump = micVolume > MIC_LEVEL_2;
+  k.loop(GAME_UPDATE_TIME, () => {
+    const inputedVolume = microphone.getVolume();
+    volume = k.lerp(volume, inputedVolume, GAME_UPDATE_TIME * 8);
     
-    let targetX = 100;
+    console.log(volume);
+
+    // update volume display
+    volumeDisplay.height = volume * 80;
+
+    const walking = volume > MIC_LEVEL_1;
+    const tryingToJump = volume > MIC_LEVEL_2;
+    
+    let targetX = PLAYER_START_POSITION;
     if (walking) {
-      targetX = 10 + micVolume * 600;
+      targetX = PLAYER_START_POSITION + volume * PLAYER_SPEED;
     }
-    player.pos.x = k.lerp(player.pos.x, targetX, k.dt() * 8);
+    player.pos.x = k.lerp(player.pos.x, targetX, k.dt() / 2);
     
     if (tryingToJump && player.isGrounded()) {
-      player.jump()
+      player.jump(PLAYER_JUMP_STRENGTH);
     }
   });
 }  
