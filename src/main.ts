@@ -13,7 +13,7 @@ const MIC_LEVEL_2 = .6;
 const PLAYER_JUMP_STRENGTH = 1000;
 const PLAYER_MIN_POSITION = 100;
 const PLAYER_MAX_POSITION = PLAYER_MIN_POSITION + 400;
-const PLAYER_LERP_SPEED = GAME_TICK * 2;
+const PLAYER_SPEED = 1000;
 const VOLUME_RAISE = GAME_TICK * 16;
 const VOLUME_DECAY = GAME_TICK * 1;
 
@@ -87,8 +87,11 @@ const main = async ({ debug = true }) => {
   }
 
   let volume = 0;
+  let wasWalking = false;
+  let destX = player.pos.x;
 
   k.loop(GAME_TICK, () => {
+    // manage volume
     const from = volume;
     const to = microphone.getVolume();
     const speed = to > from ? VOLUME_RAISE : VOLUME_DECAY;
@@ -98,15 +101,27 @@ const main = async ({ debug = true }) => {
     // update volume display
     volumeDisplay.height = volume * 80;
 
+    // player stuff
     const walking = volume > MIC_LEVEL_1;
     const tryingToJump = volume > MIC_LEVEL_2;
-    
-    const targetX = walking ? PLAYER_MAX_POSITION : PLAYER_MIN_POSITION;
-    player.pos.x = k.lerp(player.pos.x, targetX, PLAYER_LERP_SPEED);
+    const justStartedWalking = !wasWalking && walking;
+    const justStoppedWalking = wasWalking && !walking;
+
+    if (justStartedWalking) {
+      destX = PLAYER_MAX_POSITION;
+    }
+
+    if (justStoppedWalking) {
+      destX = PLAYER_MIN_POSITION;
+    }
+
+    player.moveTo(destX, player.pos.y, PLAYER_SPEED);
     
     if (tryingToJump && player.isGrounded()) {
       player.jump(PLAYER_JUMP_STRENGTH);
     }
+
+    wasWalking = walking;
   });
 }  
 
