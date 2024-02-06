@@ -1,4 +1,4 @@
-import kaboom from "kaboom";
+import kaboom, { KaboomCtx } from "kaboom";
 import { Microphone } from "./microphone";
 
 const GAME_HEIGHT = 600;
@@ -19,36 +19,9 @@ const PLAYER_SPEED = 600;
 const VOLUME_RAISE = GAME_TICK * 16;
 const VOLUME_DECAY = GAME_TICK * 1;
 
-const main = async ({ debug = true }) => {
-  const k = kaboom({
-    height: GAME_HEIGHT,
-    width: GAME_WIDTH,
-    background: GAME_BACKGROUND,
-    maxFPS: GAME_FPS
-  });
-  
-  // sprites
-  k.loadSprite('bean', '/sprites/bean.png');
-
-  // game configs
-  k.setGravity(GAME_GRAVITY);
-  k.debug.inspect = debug;
-  
-  // modules
-  const microphone = await Microphone();
-
-  // entities
-  const floor = k.add([
-    k.pos(0, k.height() - FLOOR_SIZE),
-    k.rect(k.width(), FLOOR_SIZE),
-    k.color(k.Color.BLACK),
-    k.area(),
-    k.body({
-      isStatic: true
-    })
-  ])
-  
+export const addPlayer = (k: KaboomCtx) => {
   const player = k.add([
+    "player",
     k.sprite('bean'),
     k.pos(100, 100),
     k.area(),
@@ -94,6 +67,40 @@ const main = async ({ debug = true }) => {
   player.onStateEnter("run", () => {
     player.destX = PLAYER_MAX_POSITION;
   });
+
+  return player;
+}
+
+const main = async ({ debug = true }) => {
+  const k = kaboom({
+    height: GAME_HEIGHT,
+    width: GAME_WIDTH,
+    background: GAME_BACKGROUND,
+    maxFPS: GAME_FPS
+  });
+  
+  // sprites
+  k.loadSprite('bean', '/sprites/bean.png');
+
+  // game configs
+  k.setGravity(GAME_GRAVITY);
+  k.debug.inspect = debug;
+  
+  // modules
+  const microphone = await Microphone();
+
+  // entities
+  const floor = k.add([
+    k.pos(0, k.height() - FLOOR_SIZE),
+    k.rect(k.width(), FLOOR_SIZE),
+    k.color(k.Color.BLACK),
+    k.area(),
+    k.body({
+      isStatic: true
+    })
+  ]);
+
+  const player = addPlayer(k);
 
   const volumeDisplay = k.add([
     k.pos(k.width() - 12, k.height() - 10),
