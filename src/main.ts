@@ -5,19 +5,24 @@ const GAME_HEIGHT = 600;
 const GAME_WIDTH = 800;
 const GAME_GRAVITY = 1600;
 const GAME_BACKGROUND = [164, 209, 250];
-const GAME_UPDATE_TIME = 1/30;
+const GAME_FPS = 30;
+const GAME_TICK = 1/GAME_FPS;
 const FLOOR_SIZE = 100;
 const MIC_LEVEL_1 = .15;
 const MIC_LEVEL_2 = .6;
 const PLAYER_JUMP_STRENGTH = 1000;
 const PLAYER_MIN_POSITION = 100;
 const PLAYER_MAX_POSITION = PLAYER_MIN_POSITION + 400;
+const PLAYER_LERP_SPEED = GAME_TICK * 2;
+const VOLUME_RAISE = GAME_TICK * 16;
+const VOLUME_DECAY = GAME_TICK * 1;
 
 const main = async ({ debug = true }) => {
   const k = kaboom({
     height: GAME_HEIGHT,
     width: GAME_WIDTH,
-    background: GAME_BACKGROUND
+    background: GAME_BACKGROUND,
+    maxFPS: GAME_FPS
   });
   
   // sprites
@@ -83,11 +88,7 @@ const main = async ({ debug = true }) => {
 
   let volume = 0;
 
-  k.loop(GAME_UPDATE_TIME, () => {
-    const VOLUME_RAISE = GAME_UPDATE_TIME * 16;
-    const VOLUME_DECAY = GAME_UPDATE_TIME * 1;
-    const PLAYER_LERP_SPEED = GAME_UPDATE_TIME * 2
-
+  k.loop(GAME_TICK, () => {
     const from = volume;
     const to = microphone.getVolume();
     const speed = to > from ? VOLUME_RAISE : VOLUME_DECAY;
