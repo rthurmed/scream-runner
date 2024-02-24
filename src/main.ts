@@ -12,7 +12,7 @@ const FLOOR_SIZE = 100;
 const BOUNDARY_SIZE = 300;
 const MIC_LEVEL_1 = .15;
 const MIC_LEVEL_2 = .4;
-const MIC_LEVEL_3 = .6;
+const MIC_LEVEL_3 = .7;
 const PLAYER_JUMP_STRENGTH = 1200;
 const PLAYER_MIN_POSITION = 200;
 const PLAYER_WALK_POSITION = PLAYER_MIN_POSITION + 200;
@@ -25,6 +25,8 @@ const ENEMY_AIM_OPACITY = .5;
 const ENEMY_ATTACK_TIMEOUT = 2;
 const ENEMY_FALLING_SPAWN_RATE = 5;
 const ENEMY_RIGHT_STARTING_X = PLAYER_MAX_POSITION + 150;
+const ENEMY_FLYING_HEIGHT = 120;
+const ENEMY_MOVE_SPEED = 400;
 
 export const addPlayer = (k: KaboomCtx) => {
   const player = k.add([
@@ -125,7 +127,30 @@ export const addWalkingEnemy = (k: KaboomCtx) => {
       k.sprite("ghosty"),
       k.anchor("bot"),
       k.area({ collisionIgnore: ["structure", "boundary"] }),
-      k.move(k.LEFT, 400),
+      k.move(k.LEFT, ENEMY_MOVE_SPEED),
+      k.offscreen({ destroy: true }),
+    ]);
+  });
+  return telling;
+}
+
+export const addFlyingEnemy = (k: KaboomCtx) => {
+  const telling = k.add([
+    k.pos(ENEMY_RIGHT_STARTING_X, k.height() - FLOOR_SIZE - ENEMY_FLYING_HEIGHT),
+    k.sprite("ghosty"),
+    k.anchor("bot"),
+    k.opacity(ENEMY_AIM_OPACITY),
+  ]);
+  k.wait(ENEMY_ATTACK_TIMEOUT, () => {
+    telling.destroy();
+    const projectile = k.add([
+      "enemy",
+      "projectile",
+      k.pos(ENEMY_RIGHT_STARTING_X, k.height() - FLOOR_SIZE - ENEMY_FLYING_HEIGHT),
+      k.sprite("ghosty"),
+      k.anchor("bot"),
+      k.area({ collisionIgnore: ["structure", "boundary"] }),
+      k.move(k.LEFT, ENEMY_MOVE_SPEED),
       k.offscreen({ destroy: true }),
     ]);
   });
@@ -245,6 +270,7 @@ const main = async ({ debug = true }) => {
     k.onKeyPress('2', () => (addFallingEnemy(k, PLAYER_WALK_POSITION)));
     k.onKeyPress('3', () => (addFallingEnemy(k, PLAYER_MAX_POSITION)));
     k.onKeyPress('4', () => (addWalkingEnemy(k)));
+    k.onKeyPress('5', () => (addFlyingEnemy(k)));
   }
   
   k.wait(GAME_INITIAL_TIME, () => {
