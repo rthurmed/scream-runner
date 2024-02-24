@@ -19,16 +19,21 @@ const PLAYER_WALK_POSITION = PLAYER_MIN_POSITION + 200;
 const PLAYER_MAX_POSITION = PLAYER_MIN_POSITION + 400;
 const PLAYER_SPEED = 600;
 const VOLUME_RAISE = GAME_TICK * 16;
-const VOLUME_DECAY = GAME_TICK * 1;
+const VOLUME_DECAY = GAME_TICK * 2;
 const ENEMY_FALLING_Y = 10;
 const ENEMY_AIM_OPACITY = .5;
 const ENEMY_ATTACK_TIMEOUT = 2;
 const ENEMY_FALLING_SPAWN_RATE = 5;
 const ENEMY_HORIZONTAL_SPAWN_RATE = 8;
-const ENEMY_HORIZONTAL_INITIAL_TIME = GAME_INITIAL_TIME * 1.2
+const ENEMY_HORIZONTAL_INITIAL_TIME = GAME_INITIAL_TIME * 1.2;
 const ENEMY_RIGHT_STARTING_X = PLAYER_MAX_POSITION + 150;
 const ENEMY_FLYING_HEIGHT = 120;
 const ENEMY_MOVE_SPEED = 400;
+const COLLECTIBLE_Y_MIN = 300;
+const COLLECTIBLE_Y_MAX = GAME_HEIGHT- FLOOR_SIZE - 8;
+const COLLECTIBLE_MOVE_SPEED = 200;
+const COLLECTIBLE_INITIAL_TIME = GAME_INITIAL_TIME * .5;
+const COLLECTIBLE_SPAWN_RATE = 1;
 
 type SpawnPattern = 'both' | 'walking' | 'flying';
 
@@ -44,6 +49,7 @@ export const addPlayer = (k: KaboomCtx) => {
     }),
     k.state("idle", ["idle", "walk", "run"]),
     {
+      collected: 0,
       destX: PLAYER_MIN_POSITION,
       updateState(volume: number) {
         if (this.state == "idle") {
@@ -85,6 +91,12 @@ export const addPlayer = (k: KaboomCtx) => {
   player.onCollide("projectile", (projectile, collision) => {
     k.addKaboom(player.pos);
     projectile.destroy();
+  });
+
+  player.onCollide("collectible", (collectible, collision) => {
+    // TODO: sound fx
+    player.collected = player.collected + 1;
+    collectible.destroy();
   });
 
   return player;
@@ -159,6 +171,20 @@ export const addFlyingEnemy = (k: KaboomCtx) => {
     ]);
   });
   return telling;
+}
+
+export const addCoin = (k: KaboomCtx) => {
+  const coin = k.add([
+    "coin",
+    "collectible",
+    k.pos(k.width(), k.randi(COLLECTIBLE_Y_MIN, COLLECTIBLE_Y_MAX)),
+    k.sprite("lemon"),
+    k.anchor("botleft"),
+    k.area({ collisionIgnore: ["structure", "boundary", "enemy", "projectile"] }),
+    k.move(k.LEFT, COLLECTIBLE_MOVE_SPEED),
+    k.offscreen({ destroy: true }),
+  ]);
+  return coin;
 }
 
 const main = async ({ debug = true }) => {
@@ -295,7 +321,7 @@ const main = async ({ debug = true }) => {
         'both',
         'flying',
         'flying',
-        'walking',
+        'flying',
         'walking',
         'walking',
       ]);
@@ -308,8 +334,24 @@ const main = async ({ debug = true }) => {
     });
   });
 
-  let volume = 0;
+  // collectibles
+  if (debug) {
+    k.onKeyPress('q', () => (addCoin(k)));
+  }
 
+  k.wait(COLLECTIBLE_INITIAL_TIME, () => {
+    k.loop(COLLECTIBLE_SPAWN_RATE, () => {
+      if (k.chance(.75)) {
+        addCoin(k);
+      }
+    });
+  });
+
+  // game state
+  let volume = 0;
+  let coins = 0;
+
+  // game loop
   k.loop(GAME_TICK, () => {
     // manage volume
     const rawVolume = microphone.getVolume();
