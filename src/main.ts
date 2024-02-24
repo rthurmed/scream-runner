@@ -18,6 +18,7 @@ const PLAYER_MIN_POSITION = 200;
 const PLAYER_WALK_POSITION = PLAYER_MIN_POSITION + 200;
 const PLAYER_MAX_POSITION = PLAYER_MIN_POSITION + 400;
 const PLAYER_SPEED = 600;
+const PLAYER_LIFE = 100;
 const VOLUME_RAISE = GAME_TICK * 16;
 const VOLUME_DECAY = GAME_TICK * 2;
 const ENEMY_FALLING_Y = 10;
@@ -29,11 +30,16 @@ const ENEMY_HORIZONTAL_INITIAL_TIME = GAME_INITIAL_TIME * 1.2;
 const ENEMY_RIGHT_STARTING_X = PLAYER_MAX_POSITION + 150;
 const ENEMY_FLYING_HEIGHT = 120;
 const ENEMY_MOVE_SPEED = 400;
+const ENEMY_ATTACKS_TO_DEATH = 3;
+const ENEMY_DAMAGE = PLAYER_LIFE / ENEMY_ATTACKS_TO_DEATH;
 const COLLECTIBLE_Y_MIN = 300;
 const COLLECTIBLE_Y_MAX = GAME_HEIGHT- FLOOR_SIZE - 8;
 const COLLECTIBLE_MOVE_SPEED = 200;
 const COLLECTIBLE_INITIAL_TIME = GAME_INITIAL_TIME * .5;
 const COLLECTIBLE_SPAWN_RATE = 1;
+const COLLECTIBLE_HEAL = ENEMY_DAMAGE / 3;
+const UI_LIFE_WIDTH = 400;
+const UI_LIFE_HEIGHT = 16;
 
 type SpawnPattern = 'both' | 'walking' | 'flying';
 
@@ -49,6 +55,7 @@ export const addPlayer = (k: KaboomCtx) => {
     }),
     k.state("idle", ["idle", "walk", "run"]),
     {
+      life: PLAYER_LIFE,
       collected: 0,
       destX: PLAYER_MIN_POSITION,
       updateState(volume: number) {
@@ -89,6 +96,8 @@ export const addPlayer = (k: KaboomCtx) => {
   });
 
   player.onCollide("projectile", (projectile, collision) => {
+    // TODO: death
+    player.life = player.life - ENEMY_DAMAGE;
     k.addKaboom(player.pos);
     projectile.destroy();
   });
@@ -96,6 +105,11 @@ export const addPlayer = (k: KaboomCtx) => {
   player.onCollide("collectible", (collectible, collision) => {
     // TODO: sound fx
     player.collected = player.collected + 1;
+    let healed = player.life + COLLECTIBLE_HEAL;
+    if (healed > PLAYER_LIFE) {
+      healed = PLAYER_LIFE;
+    }
+    player.life = healed;
     collectible.destroy();
   });
 
@@ -217,7 +231,7 @@ const main = async ({ debug = true }) => {
   // modules
   const microphone = await Microphone();
 
-  // entities
+  // boundaries
   const floor = k.add([
     "structure",
     k.pos(0, k.height() - FLOOR_SIZE),
@@ -267,7 +281,23 @@ const main = async ({ debug = true }) => {
     ])
   ];
 
+  // player
   const player = addPlayer(k);
+
+  // ui
+  const lifeBackground = k.add([
+    k.pos(12, k.height() - 10),
+    k.rect(UI_LIFE_WIDTH, UI_LIFE_HEIGHT),
+    k.anchor("botleft"),
+    k.color(k.Color.fromHex("#7A213A"))
+  ]);
+
+  const lifeDisplay = k.add([
+    k.pos(12, k.height() - 10),
+    k.rect(UI_LIFE_WIDTH, UI_LIFE_HEIGHT),
+    k.anchor("botleft"),
+    k.color(k.Color.RED)
+  ]);
 
   const volumeDisplay = k.add([
     k.pos(k.width() - 12, k.height() - 10),
@@ -360,6 +390,9 @@ const main = async ({ debug = true }) => {
 
     // update volume display
     volumeDisplay.height = volume * 80;
+
+    // update life display
+    lifeDisplay.width = UI_LIFE_WIDTH * (player.life / PLAYER_LIFE);
 
     // player movement
     player.updateState(volume);
