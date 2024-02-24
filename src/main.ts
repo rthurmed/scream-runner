@@ -120,6 +120,14 @@ const main = async ({ debug = true }) => {
   // game configs
   k.setGravity(GAME_GRAVITY);
   k.debug.inspect = debug;
+
+  // debug tools
+  if (debug) {
+    // camera controls
+    k.onKeyDown('=', () => (k.camScale(k.camScale().scale(k.vec2(1.1)))));
+    k.onKeyDown('-', () => (k.camScale(k.camScale().scale(k.vec2(0.9)))));
+    k.onKeyDown('0', () => (k.camScale(k.vec2(1))));
+  }
   
   // modules
   const microphone = await Microphone();
