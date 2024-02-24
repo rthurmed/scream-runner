@@ -8,11 +8,12 @@ const GAME_BACKGROUND = [164, 209, 250];
 const GAME_FPS = 60;
 const GAME_TICK = 1/GAME_FPS;
 const FLOOR_SIZE = 100;
+const BOUNDARY_SIZE = 300;
 const MIC_LEVEL_1 = .15;
 const MIC_LEVEL_2 = .4;
 const MIC_LEVEL_3 = .6;
 const PLAYER_JUMP_STRENGTH = 1200;
-const PLAYER_MIN_POSITION = 100;
+const PLAYER_MIN_POSITION = 200;
 const PLAYER_WALK_POSITION = PLAYER_MIN_POSITION + 200;
 const PLAYER_MAX_POSITION = PLAYER_MIN_POSITION + 400;
 const PLAYER_SPEED = 600;
@@ -96,7 +97,7 @@ export const addFallingEnemy = (k: KaboomCtx, x: number) => {
       k.pos(x, ENEMY_FALLING_Y),
       k.sprite("bomb"),
       k.anchor("top"),
-      k.area({ collisionIgnore: ["structure"] }),
+      k.area({ collisionIgnore: ["structure", "boundary"] }),
       k.body(),
       k.offscreen({ destroy: true }),
     ]);
@@ -143,6 +144,44 @@ const main = async ({ debug = true }) => {
       isStatic: true
     })
   ]);
+  const boundaries = [
+    k.add([ // left boundary
+      "boundary",
+      k.pos(-BOUNDARY_SIZE, -BOUNDARY_SIZE),
+      k.rect(BOUNDARY_SIZE, k.height() + (BOUNDARY_SIZE * 2)),
+      k.area(),
+      k.body({
+        isStatic: true
+      })
+    ]),
+    k.add([ // right boundary
+      "boundary",
+      k.pos(k.width(), -BOUNDARY_SIZE),
+      k.rect(BOUNDARY_SIZE, k.height() + (BOUNDARY_SIZE * 2)),
+      k.area(),
+      k.body({
+        isStatic: true
+      })
+    ]),
+    k.add([ // bottom boundary
+      "boundary",
+      k.pos(-BOUNDARY_SIZE, k.height()),
+      k.rect(k.width() + (BOUNDARY_SIZE * 2), BOUNDARY_SIZE),
+      k.area(),
+      k.body({
+        isStatic: true
+      })
+    ]),
+    k.add([ // top boundary
+      "boundary",
+      k.pos(-BOUNDARY_SIZE, -BOUNDARY_SIZE),
+      k.rect(k.width() + (BOUNDARY_SIZE * 2), BOUNDARY_SIZE),
+      k.area(),
+      k.body({
+        isStatic: true
+      })
+    ])
+  ];
 
   const player = addPlayer(k);
 
