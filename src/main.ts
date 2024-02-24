@@ -7,6 +7,7 @@ const GAME_GRAVITY = 2400;
 const GAME_BACKGROUND = [164, 209, 250];
 const GAME_FPS = 60;
 const GAME_TICK = 1/GAME_FPS;
+const GAME_INITIAL_TIME = 5; // s
 const FLOOR_SIZE = 100;
 const BOUNDARY_SIZE = 300;
 const MIC_LEVEL_1 = .15;
@@ -22,6 +23,7 @@ const VOLUME_DECAY = GAME_TICK * 1;
 const ENEMY_FALLING_Y = 10;
 const ENEMY_AIM_OPACITY = .5;
 const ENEMY_ATTACK_TIMEOUT = 3;
+const ENEMY_FALLING_SPAWN_RATE = 5;
 
 export const addPlayer = (k: KaboomCtx) => {
   const player = k.add([
@@ -210,8 +212,17 @@ const main = async ({ debug = true }) => {
     k.add([...rulerTemplate, k.color(yellow),  k.rect(2, 80 * MIC_LEVEL_1)]);
   }
 
-  // TODO: spawn pattern
-  addFallingEnemy(k, PLAYER_WALK_POSITION);
+  k.wait(GAME_INITIAL_TIME, () => {
+    k.loop(ENEMY_FALLING_SPAWN_RATE, () => {
+      const spawnXPosition = k.choose([
+        PLAYER_MIN_POSITION,
+        PLAYER_WALK_POSITION,
+        PLAYER_WALK_POSITION,
+        PLAYER_MAX_POSITION,
+      ])
+      addFallingEnemy(k, spawnXPosition);
+    });
+  });
 
   let volume = 0;
 
