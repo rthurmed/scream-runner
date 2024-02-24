@@ -24,9 +24,13 @@ const ENEMY_FALLING_Y = 10;
 const ENEMY_AIM_OPACITY = .5;
 const ENEMY_ATTACK_TIMEOUT = 2;
 const ENEMY_FALLING_SPAWN_RATE = 5;
+const ENEMY_HORIZONTAL_SPAWN_RATE = 8;
+const ENEMY_HORIZONTAL_INITIAL_TIME = GAME_INITIAL_TIME * 1.2
 const ENEMY_RIGHT_STARTING_X = PLAYER_MAX_POSITION + 150;
 const ENEMY_FLYING_HEIGHT = 120;
 const ENEMY_MOVE_SPEED = 400;
+
+type SpawnPattern = 'both' | 'walking' | 'flying';
 
 export const addPlayer = (k: KaboomCtx) => {
   const player = k.add([
@@ -282,6 +286,25 @@ const main = async ({ debug = true }) => {
         PLAYER_MAX_POSITION,
       ])
       addFallingEnemy(k, spawnXPosition);
+    });
+  });
+
+  k.wait(ENEMY_HORIZONTAL_INITIAL_TIME, () => {
+    k.loop(ENEMY_HORIZONTAL_SPAWN_RATE, () => {
+      const spawnPattern: SpawnPattern = k.choose([
+        'both',
+        'flying',
+        'flying',
+        'walking',
+        'walking',
+        'walking',
+      ]);
+      if (spawnPattern == 'flying' || spawnPattern == 'both') {
+        addFlyingEnemy(k);
+      }
+      if (spawnPattern == 'walking' || spawnPattern == 'both') {
+        addWalkingEnemy(k);
+      }
     });
   });
 
