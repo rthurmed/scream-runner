@@ -22,8 +22,9 @@ const VOLUME_RAISE = GAME_TICK * 16;
 const VOLUME_DECAY = GAME_TICK * 1;
 const ENEMY_FALLING_Y = 10;
 const ENEMY_AIM_OPACITY = .5;
-const ENEMY_ATTACK_TIMEOUT = 3;
+const ENEMY_ATTACK_TIMEOUT = 2;
 const ENEMY_FALLING_SPAWN_RATE = 5;
+const ENEMY_RIGHT_STARTING_X = PLAYER_MAX_POSITION + 150;
 
 export const addPlayer = (k: KaboomCtx) => {
   const player = k.add([
@@ -84,7 +85,7 @@ export const addPlayer = (k: KaboomCtx) => {
 }
 
 export const addFallingEnemy = (k: KaboomCtx, x: number) => {
-  const aim = k.add([
+  const telling = k.add([
     k.pos(x, ENEMY_FALLING_Y),
     k.sprite("bomb"),
     k.anchor("top"),
@@ -92,7 +93,7 @@ export const addFallingEnemy = (k: KaboomCtx, x: number) => {
   ]);
 
   k.wait(ENEMY_ATTACK_TIMEOUT, () => {
-    aim.destroy();
+    telling.destroy();
     const projectile = k.add([
       "enemy",
       "projectile",
@@ -105,7 +106,30 @@ export const addFallingEnemy = (k: KaboomCtx, x: number) => {
     ]);
   });
 
-  return aim;
+  return telling;
+}
+
+export const addWalkingEnemy = (k: KaboomCtx) => {
+  const telling = k.add([
+    k.pos(ENEMY_RIGHT_STARTING_X, k.height() - FLOOR_SIZE),
+    k.sprite("ghosty"),
+    k.anchor("bot"),
+    k.opacity(ENEMY_AIM_OPACITY),
+  ]);
+  k.wait(ENEMY_ATTACK_TIMEOUT, () => {
+    telling.destroy();
+    const projectile = k.add([
+      "enemy",
+      "projectile",
+      k.pos(ENEMY_RIGHT_STARTING_X, k.height() - FLOOR_SIZE),
+      k.sprite("ghosty"),
+      k.anchor("bot"),
+      k.area({ collisionIgnore: ["structure", "boundary"] }),
+      k.move(k.LEFT, 400),
+      k.offscreen({ destroy: true }),
+    ]);
+  });
+  return telling;
 }
 
 const main = async ({ debug = true }) => {
@@ -119,6 +143,9 @@ const main = async ({ debug = true }) => {
   // sprites
   k.loadSprite("bean", "/sprites/bean.png");
   k.loadSprite("bomb", "/sprites/bomb.png");
+  k.loadSprite("lemon", "/sprites/lemon.png");
+  k.loadSprite("gazer", "/sprites/gazer.png");
+  k.loadSprite("ghosty", "/sprites/ghosty.png");
 
   // game configs
   k.setGravity(GAME_GRAVITY);
@@ -212,6 +239,14 @@ const main = async ({ debug = true }) => {
     k.add([...rulerTemplate, k.color(yellow),  k.rect(2, 80 * MIC_LEVEL_1)]);
   }
 
+  // enemies
+  if (debug) {
+    k.onKeyPress('1', () => (addFallingEnemy(k, PLAYER_MIN_POSITION)));
+    k.onKeyPress('2', () => (addFallingEnemy(k, PLAYER_WALK_POSITION)));
+    k.onKeyPress('3', () => (addFallingEnemy(k, PLAYER_MAX_POSITION)));
+    k.onKeyPress('4', () => (addWalkingEnemy(k)));
+  }
+  
   k.wait(GAME_INITIAL_TIME, () => {
     k.loop(ENEMY_FALLING_SPAWN_RATE, () => {
       const spawnXPosition = k.choose([
