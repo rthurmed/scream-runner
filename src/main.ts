@@ -1,4 +1,4 @@
-import kaboom, { KaboomCtx } from "kaboom";
+import kaboom, { GameObj, KaboomCtx, OpacityComp } from "kaboom";
 import { Microphone } from "./microphone";
 
 const GAME_WIDTH = 800;
@@ -129,108 +129,103 @@ export const addPlayer = (k: KaboomCtx) => {
   return player;
 }
 
+export const timedOutAttack = (
+  k: KaboomCtx,
+  obj: GameObj<OpacityComp>,
+  timeout = ENEMY_ATTACK_TIMEOUT,
+  opacity = ENEMY_AIM_OPACITY
+) => {
+  obj.opacity = opacity;
+  obj.paused = true;
+
+  k.wait(timeout, () => {
+    obj.paused = false;
+    obj.opacity = 1;
+  });
+}
+
 export const addFallingEnemy = (k: KaboomCtx, x: number) => {
-  const visual = [
+  const enemy = k.add([
+    "enemy",
+    "projectile",
     k.pos(x, ENEMY_FALLING_Y),
     k.sprite("stomper", {
       width: SPRITE_SCALED_SIZE,
       height: SPRITE_SCALED_SIZE
     }),
     k.anchor("top"),
-  ]
-  const telling = k.add([
-    ...visual,
-    k.opacity(ENEMY_AIM_OPACITY),
+    k.opacity(1),
+    k.area({
+      collisionIgnore: ["structure", "boundary"],
+      shape: new k.Rect(
+        k.vec2(0, 8 * SPRITE_SCALING),
+        16 * SPRITE_SCALING,
+        24 * SPRITE_SCALING
+      )
+    }),
+    k.body(),
+    k.offscreen({ destroy: true }),
   ]);
 
-  k.wait(ENEMY_ATTACK_TIMEOUT, () => {
-    telling.destroy();
-    const projectile = k.add([
-      "enemy",
-      "projectile",
-      ...visual,
-      k.area({
-        collisionIgnore: ["structure", "boundary"],
-        shape: new k.Rect(
-          k.vec2(0, 8 * SPRITE_SCALING),
-          16 * SPRITE_SCALING,
-          24 * SPRITE_SCALING
-        )
-      }),
-      k.body(),
-      k.offscreen({ destroy: true }),
-    ]);
-  });
+  timedOutAttack(k, enemy);
 
-  return telling;
+  return enemy;
 }
 
 export const addWalkingEnemy = (k: KaboomCtx) => {
-  const visual = [
+  const enemy = k.add([
+    "enemy",
+    "projectile",
     k.pos(ENEMY_RIGHT_STARTING_X, k.height() - FLOOR_SIZE),
     k.sprite("walker", {
       width: SPRITE_SCALED_SIZE,
       height: SPRITE_SCALED_SIZE
     }),
-    k.anchor("bot")
-  ]
-  const telling = k.add([
-    ...visual,
-    k.opacity(ENEMY_AIM_OPACITY),
+    k.anchor("bot"),
+    k.opacity(1),
+    k.area({
+      collisionIgnore: ["structure", "boundary"],
+      shape: new k.Rect(
+        k.vec2(0, 0),
+        14 * SPRITE_SCALING,
+        22 * SPRITE_SCALING
+      )
+    }),
+    k.move(k.LEFT, ENEMY_MOVE_SPEED),
+    k.offscreen({ destroy: true }),
   ]);
-  k.wait(ENEMY_ATTACK_TIMEOUT, () => {
-    telling.destroy();
-    const projectile = k.add([
-      "enemy",
-      "projectile",
-      ...visual,
-      k.area({
-        collisionIgnore: ["structure", "boundary"],
-        shape: new k.Rect(
-          k.vec2(0, 0),
-          14 * SPRITE_SCALING,
-          22 * SPRITE_SCALING
-        )
-      }),
-      k.move(k.LEFT, ENEMY_MOVE_SPEED),
-      k.offscreen({ destroy: true }),
-    ]);
-  });
-  return telling;
+
+  timedOutAttack(k, enemy);
+
+  return enemy;
 }
 
 export const addFlyingEnemy = (k: KaboomCtx) => {
-  const visual = [
+  const enemy = k.add([
+    "enemy",
+    "projectile",
     k.pos(ENEMY_RIGHT_STARTING_X, k.height() - FLOOR_SIZE - ENEMY_FLYING_HEIGHT),
     k.sprite("hoverer", {
       width: SPRITE_SCALED_SIZE,
       height: SPRITE_SCALED_SIZE
     }),
     k.anchor("bot"),
-  ]
-  const telling = k.add([
-    ...visual,
-    k.opacity(ENEMY_AIM_OPACITY),
+    k.opacity(1),
+    k.area({
+      collisionIgnore: ["structure", "boundary"],
+      shape: new k.Rect(
+        k.vec2(0, -3 * SPRITE_SCALING),
+        24 * SPRITE_SCALING,
+        14 * SPRITE_SCALING
+      )
+    }),
+    k.move(k.LEFT, ENEMY_MOVE_SPEED),
+    k.offscreen({ destroy: true }),
   ]);
-  k.wait(ENEMY_ATTACK_TIMEOUT, () => {
-    telling.destroy();
-    const projectile = k.add([
-      "enemy",
-      "projectile",
-      ...visual,
-      k.area({
-        collisionIgnore: ["structure", "boundary"],
-        shape: new k.Rect(
-          k.vec2(0, -3 * SPRITE_SCALING),
-          24 * SPRITE_SCALING,
-          14 * SPRITE_SCALING
-        )
-      }),
-      k.move(k.LEFT, ENEMY_MOVE_SPEED),
-      k.offscreen({ destroy: true }),
-    ]);
-  });
-  return telling;
+
+  timedOutAttack(k, enemy);
+
+  return enemy;
 }
 
 export const addCoin = (k: KaboomCtx) => { 
@@ -246,9 +241,9 @@ export const addCoin = (k: KaboomCtx) => {
     k.area({
       collisionIgnore: ["structure", "boundary", "enemy", "projectile"],
       shape: new k.Rect(
-        k.vec2(6 * SPRITE_SCALING, -6 * SPRITE_SCALING),
-        20 * SPRITE_SCALING,
-        20 * SPRITE_SCALING
+        k.vec2(8 * SPRITE_SCALING, -8 * SPRITE_SCALING),
+        16 * SPRITE_SCALING,
+        16 * SPRITE_SCALING
       )
     }),
     k.move(k.LEFT, COLLECTIBLE_MOVE_SPEED),
