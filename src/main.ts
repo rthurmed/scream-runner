@@ -1,22 +1,23 @@
 import kaboom, { KaboomCtx } from "kaboom";
 import { Microphone } from "./microphone";
 
-const GAME_HEIGHT = 600;
 const GAME_WIDTH = 800;
+const GAME_HEIGHT = 600;
 const GAME_GRAVITY = 2400;
 const GAME_BACKGROUND = [164, 209, 250];
 const GAME_FPS = 60;
 const GAME_TICK = 1/GAME_FPS;
 const GAME_INITIAL_TIME = 5; // s
-const FLOOR_SIZE = 100;
+const FLOOR_SIZE = GAME_HEIGHT / 5;
 const BOUNDARY_SIZE = 300;
 const MIC_LEVEL_1 = .15;
 const MIC_LEVEL_2 = .4;
 const MIC_LEVEL_3 = .7;
 const PLAYER_JUMP_STRENGTH = 1200;
-const PLAYER_MIN_POSITION = 200;
-const PLAYER_WALK_POSITION = PLAYER_MIN_POSITION + 200;
-const PLAYER_MAX_POSITION = PLAYER_MIN_POSITION + 400;
+const PLAYER_STEP = GAME_WIDTH / 4;
+const PLAYER_MIN_POSITION = PLAYER_STEP * 1;
+const PLAYER_WALK_POSITION = PLAYER_STEP * 2;
+const PLAYER_MAX_POSITION = PLAYER_STEP * 3;
 const PLAYER_SPEED = 600;
 const PLAYER_LIFE = 100;
 const VOLUME_RAISE = GAME_TICK * 16;
@@ -40,16 +41,28 @@ const COLLECTIBLE_SPAWN_RATE = 1;
 const COLLECTIBLE_HEAL = ENEMY_DAMAGE / 3;
 const UI_LIFE_WIDTH = 400;
 const UI_LIFE_HEIGHT = 16;
+const SPRITESHEET_SIZE = 32;
+const SPRITE_SCALING = 4;
+const SPRITE_SCALED_SIZE = SPRITESHEET_SIZE * SPRITE_SCALING;
 
 type SpawnPattern = 'both' | 'walking' | 'flying';
 
 export const addPlayer = (k: KaboomCtx) => {
   const player = k.add([
     "player",
-    k.sprite("bean"),
+    k.sprite("enzo", {
+      width: SPRITE_SCALED_SIZE,
+      height: SPRITE_SCALED_SIZE
+    }),
     k.anchor("bot"),
     k.pos(100, 100),
-    k.area(),
+    k.area({
+      shape: new k.Rect(
+        k.vec2(0, 0),
+        13 * SPRITE_SCALING,
+        19 * SPRITE_SCALING
+      )
+    }),
     k.body({
       mass: .5
     }),
@@ -117,10 +130,16 @@ export const addPlayer = (k: KaboomCtx) => {
 }
 
 export const addFallingEnemy = (k: KaboomCtx, x: number) => {
-  const telling = k.add([
+  const visual = [
     k.pos(x, ENEMY_FALLING_Y),
-    k.sprite("bomb"),
+    k.sprite("stomper", {
+      width: SPRITE_SCALED_SIZE,
+      height: SPRITE_SCALED_SIZE
+    }),
     k.anchor("top"),
+  ]
+  const telling = k.add([
+    ...visual,
     k.opacity(ENEMY_AIM_OPACITY),
   ]);
 
@@ -129,10 +148,15 @@ export const addFallingEnemy = (k: KaboomCtx, x: number) => {
     const projectile = k.add([
       "enemy",
       "projectile",
-      k.pos(x, ENEMY_FALLING_Y),
-      k.sprite("bomb"),
-      k.anchor("top"),
-      k.area({ collisionIgnore: ["structure", "boundary"] }),
+      ...visual,
+      k.area({
+        collisionIgnore: ["structure", "boundary"],
+        shape: new k.Rect(
+          k.vec2(0, 8 * SPRITE_SCALING),
+          16 * SPRITE_SCALING,
+          24 * SPRITE_SCALING
+        )
+      }),
       k.body(),
       k.offscreen({ destroy: true }),
     ]);
@@ -142,10 +166,16 @@ export const addFallingEnemy = (k: KaboomCtx, x: number) => {
 }
 
 export const addWalkingEnemy = (k: KaboomCtx) => {
-  const telling = k.add([
+  const visual = [
     k.pos(ENEMY_RIGHT_STARTING_X, k.height() - FLOOR_SIZE),
-    k.sprite("ghosty"),
-    k.anchor("bot"),
+    k.sprite("walker", {
+      width: SPRITE_SCALED_SIZE,
+      height: SPRITE_SCALED_SIZE
+    }),
+    k.anchor("bot")
+  ]
+  const telling = k.add([
+    ...visual,
     k.opacity(ENEMY_AIM_OPACITY),
   ]);
   k.wait(ENEMY_ATTACK_TIMEOUT, () => {
@@ -153,10 +183,15 @@ export const addWalkingEnemy = (k: KaboomCtx) => {
     const projectile = k.add([
       "enemy",
       "projectile",
-      k.pos(ENEMY_RIGHT_STARTING_X, k.height() - FLOOR_SIZE),
-      k.sprite("ghosty"),
-      k.anchor("bot"),
-      k.area({ collisionIgnore: ["structure", "boundary"] }),
+      ...visual,
+      k.area({
+        collisionIgnore: ["structure", "boundary"],
+        shape: new k.Rect(
+          k.vec2(0, 0),
+          14 * SPRITE_SCALING,
+          22 * SPRITE_SCALING
+        )
+      }),
       k.move(k.LEFT, ENEMY_MOVE_SPEED),
       k.offscreen({ destroy: true }),
     ]);
@@ -165,10 +200,16 @@ export const addWalkingEnemy = (k: KaboomCtx) => {
 }
 
 export const addFlyingEnemy = (k: KaboomCtx) => {
-  const telling = k.add([
+  const visual = [
     k.pos(ENEMY_RIGHT_STARTING_X, k.height() - FLOOR_SIZE - ENEMY_FLYING_HEIGHT),
-    k.sprite("ghosty"),
+    k.sprite("hoverer", {
+      width: SPRITE_SCALED_SIZE,
+      height: SPRITE_SCALED_SIZE
+    }),
     k.anchor("bot"),
+  ]
+  const telling = k.add([
+    ...visual,
     k.opacity(ENEMY_AIM_OPACITY),
   ]);
   k.wait(ENEMY_ATTACK_TIMEOUT, () => {
@@ -176,10 +217,15 @@ export const addFlyingEnemy = (k: KaboomCtx) => {
     const projectile = k.add([
       "enemy",
       "projectile",
-      k.pos(ENEMY_RIGHT_STARTING_X, k.height() - FLOOR_SIZE - ENEMY_FLYING_HEIGHT),
-      k.sprite("ghosty"),
-      k.anchor("bot"),
-      k.area({ collisionIgnore: ["structure", "boundary"] }),
+      ...visual,
+      k.area({
+        collisionIgnore: ["structure", "boundary"],
+        shape: new k.Rect(
+          k.vec2(0, -3 * SPRITE_SCALING),
+          24 * SPRITE_SCALING,
+          14 * SPRITE_SCALING
+        )
+      }),
       k.move(k.LEFT, ENEMY_MOVE_SPEED),
       k.offscreen({ destroy: true }),
     ]);
@@ -187,14 +233,24 @@ export const addFlyingEnemy = (k: KaboomCtx) => {
   return telling;
 }
 
-export const addCoin = (k: KaboomCtx) => {
+export const addCoin = (k: KaboomCtx) => { 
   const coin = k.add([
     "coin",
     "collectible",
     k.pos(k.width(), k.randi(COLLECTIBLE_Y_MIN, COLLECTIBLE_Y_MAX)),
-    k.sprite("lemon"),
+    k.sprite("cake", {
+      width: SPRITE_SCALED_SIZE,
+      height: SPRITE_SCALED_SIZE
+    }),
     k.anchor("botleft"),
-    k.area({ collisionIgnore: ["structure", "boundary", "enemy", "projectile"] }),
+    k.area({
+      collisionIgnore: ["structure", "boundary", "enemy", "projectile"],
+      shape: new k.Rect(
+        k.vec2(6 * SPRITE_SCALING, -6 * SPRITE_SCALING),
+        20 * SPRITE_SCALING,
+        20 * SPRITE_SCALING
+      )
+    }),
     k.move(k.LEFT, COLLECTIBLE_MOVE_SPEED),
     k.offscreen({ destroy: true }),
   ]);
@@ -203,8 +259,8 @@ export const addCoin = (k: KaboomCtx) => {
 
 const main = async ({ debug = true }) => {
   const k = kaboom({
-    height: GAME_HEIGHT,
     width: GAME_WIDTH,
+    height: GAME_HEIGHT,
     background: GAME_BACKGROUND,
     maxFPS: GAME_FPS
   });
@@ -215,6 +271,39 @@ const main = async ({ debug = true }) => {
   k.loadSprite("lemon", "/sprites/lemon.png");
   k.loadSprite("gazer", "/sprites/gazer.png");
   k.loadSprite("ghosty", "/sprites/ghosty.png");
+  
+  k.loadSpriteAtlas("/sprites/spritesheet.png", {
+    "cake": {
+      height: SPRITESHEET_SIZE,
+      width: SPRITESHEET_SIZE,
+      x: SPRITESHEET_SIZE * 0,
+      y: SPRITESHEET_SIZE * 0
+    },
+    "enzo": {
+      height: SPRITESHEET_SIZE,
+      width: SPRITESHEET_SIZE,
+      x: SPRITESHEET_SIZE * 0,
+      y: SPRITESHEET_SIZE
+    },
+    "walker": {
+      height: SPRITESHEET_SIZE,
+      width: SPRITESHEET_SIZE,
+      x: SPRITESHEET_SIZE,
+      y: SPRITESHEET_SIZE
+    },
+    "stomper": {
+      height: SPRITESHEET_SIZE,
+      width: SPRITESHEET_SIZE,
+      x: SPRITESHEET_SIZE * 2,
+      y: SPRITESHEET_SIZE
+    },
+    "hoverer": {
+      height: SPRITESHEET_SIZE,
+      width: SPRITESHEET_SIZE,
+      x: SPRITESHEET_SIZE * 3,
+      y: SPRITESHEET_SIZE
+    },
+  });
 
   // game configs
   k.setGravity(GAME_GRAVITY);
@@ -225,7 +314,10 @@ const main = async ({ debug = true }) => {
     // camera controls
     k.onKeyDown('=', () => (k.camScale(k.camScale().scale(k.vec2(1.1)))));
     k.onKeyDown('-', () => (k.camScale(k.camScale().scale(k.vec2(0.9)))));
+    k.onKeyDown('[', () => (k.debug.timeScale = k.debug.timeScale * 1.1));
+    k.onKeyDown(']', () => (k.debug.timeScale = k.debug.timeScale * 0.9));
     k.onKeyDown('0', () => (k.camScale(k.vec2(1))));
+    k.onKeyDown('p', () => (k.debug.paused = !k.debug.paused))
   }
   
   // modules
@@ -234,8 +326,8 @@ const main = async ({ debug = true }) => {
   // boundaries
   const floor = k.add([
     "structure",
-    k.pos(0, k.height() - FLOOR_SIZE),
-    k.rect(k.width(), FLOOR_SIZE),
+    k.pos(-BOUNDARY_SIZE, k.height() - FLOOR_SIZE),
+    k.rect(k.width() + (BOUNDARY_SIZE * 2), FLOOR_SIZE),
     k.color(k.Color.BLACK),
     k.area(),
     k.body({
