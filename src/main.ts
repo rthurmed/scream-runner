@@ -261,13 +261,13 @@ const main = async ({ debug = true }) => {
   });
   
   // sprites
-  k.loadSprite("bean", "/sprites/bean.png");
-  k.loadSprite("bomb", "/sprites/bomb.png");
-  k.loadSprite("lemon", "/sprites/lemon.png");
-  k.loadSprite("gazer", "/sprites/gazer.png");
-  k.loadSprite("ghosty", "/sprites/ghosty.png");
+  k.loadSprite("bean", "sprites/bean.png");
+  k.loadSprite("bomb", "sprites/bomb.png");
+  k.loadSprite("lemon", "sprites/lemon.png");
+  k.loadSprite("gazer", "sprites/gazer.png");
+  k.loadSprite("ghosty", "sprites/ghosty.png");
   
-  k.loadSpriteAtlas("/sprites/spritesheet.png", {
+  k.loadSpriteAtlas("sprites/spritesheet.png", {
     "cake": {
       height: SPRITESHEET_SIZE,
       width: SPRITESHEET_SIZE,
