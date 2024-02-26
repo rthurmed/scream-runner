@@ -4,7 +4,7 @@ import { Microphone } from "./microphone";
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 600;
 const GAME_GRAVITY = 2400;
-const GAME_BACKGROUND = [164, 209, 250];
+const GAME_BACKGROUND = [56, 152, 255];
 const GAME_FPS = 60;
 const GAME_TICK = 1/GAME_FPS;
 const GAME_INITIAL_TIME = 5; // s
@@ -31,13 +31,13 @@ const ENEMY_HORIZONTAL_INITIAL_TIME = GAME_INITIAL_TIME * 1.2;
 const ENEMY_RIGHT_STARTING_X = PLAYER_MAX_POSITION + 150;
 const ENEMY_FLYING_HEIGHT = 120;
 const ENEMY_MOVE_SPEED = 400;
-const ENEMY_ATTACKS_TO_DEATH = 3;
+const ENEMY_ATTACKS_TO_DEATH = 4;
 const ENEMY_DAMAGE = PLAYER_LIFE / ENEMY_ATTACKS_TO_DEATH;
 const COLLECTIBLE_Y_MIN = 180;
 const COLLECTIBLE_Y_MAX = GAME_HEIGHT- FLOOR_SIZE - 4;
 const COLLECTIBLE_MOVE_SPEED = 200;
 const COLLECTIBLE_INITIAL_TIME = GAME_INITIAL_TIME * .5;
-const COLLECTIBLE_SPAWN_RATE = 1;
+const COLLECTIBLE_SPAWN_RATE = 2;
 const COLLECTIBLE_HEAL = ENEMY_DAMAGE / 3;
 const UI_LIFE_WIDTH = 400;
 const UI_LIFE_HEIGHT = 16;
@@ -323,7 +323,7 @@ const main = async ({ debug = true }) => {
     "structure",
     k.pos(-BOUNDARY_SIZE, k.height() - FLOOR_SIZE),
     k.rect(k.width() + (BOUNDARY_SIZE * 2), FLOOR_SIZE),
-    k.color(k.Color.BLACK),
+    k.color(k.Color.fromHex('#372538')),
     k.area(),
     k.body({
       isStatic: true
@@ -383,7 +383,7 @@ const main = async ({ debug = true }) => {
     k.pos(12, k.height() - 10),
     k.rect(UI_LIFE_WIDTH, UI_LIFE_HEIGHT),
     k.anchor("botleft"),
-    k.color(k.Color.RED)
+    k.color(k.Color.fromHex("#e14141"))
   ]);
 
   const volumeDisplay = k.add([
@@ -491,7 +491,7 @@ const main = async ({ debug = true }) => {
       player.jump(PLAYER_JUMP_STRENGTH);
     }
   });
-}  
+}
 
 main({
   debug: true
