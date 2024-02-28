@@ -8,7 +8,7 @@ const GAME_BACKGROUND = [56, 152, 255];
 const GAME_FPS = 60;
 const GAME_TICK = 1/GAME_FPS;
 const GAME_INITIAL_TIME = 5; // s
-const FLOOR_SIZE = 32 * 4;
+const FLOOR_SIZE = GAME_HEIGHT / 5;
 const BOUNDARY_SIZE = 300;
 const MIC_LEVEL_1 = .15;
 const MIC_LEVEL_2 = .4;
@@ -386,16 +386,17 @@ const main = async ({ debug = true }) => {
 
   // ui
   const quarterSpriteSize = SPRITE_SCALED_SIZE/4;
+  const iconPadding = 6;
 
-  const uiLifeHeight = k.height() - quarterSpriteSize * 3;
-  const uiCollectibleHeight = k.height() - quarterSpriteSize;
+  const uiLifeHeight = k.height() - quarterSpriteSize * 2;
+  const uiCollectibleHeight = quarterSpriteSize + iconPadding;
 
   const iconLife = k.add([
     k.sprite("heart", {
       width: SPRITE_SCALED_SIZE,
       height: SPRITE_SCALED_SIZE
     }),
-    k.pos(-quarterSpriteSize + 6, uiLifeHeight),
+    k.pos(-quarterSpriteSize + iconPadding, uiLifeHeight),
     k.anchor("left")
   ]);
 
@@ -404,11 +405,11 @@ const main = async ({ debug = true }) => {
       width: SPRITE_SCALED_SIZE,
       height: SPRITE_SCALED_SIZE
     }),
-    k.pos(-quarterSpriteSize + 6, uiCollectibleHeight),
+    k.pos(-quarterSpriteSize + iconPadding, uiCollectibleHeight),
     k.anchor("left")
   ]);
   const textCollectible = k.add([
-    k.text("11"),
+    k.text("0"),
     k.pos(quarterSpriteSize * 2.5, uiCollectibleHeight),
     k.anchor("left")
   ])
@@ -521,8 +522,9 @@ const main = async ({ debug = true }) => {
     // update volume display
     volumeDisplay.height = volume * 80;
 
-    // update life display
+    // update player display
     lifeDisplay.width = UI_LIFE_WIDTH * (player.hp() / player.maxHP());
+    textCollectible.text = player.collected.toString();
 
     // player movement
     player.updateState(volume);
