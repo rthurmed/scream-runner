@@ -268,18 +268,18 @@ const main = async ({ debug = true }) => {
   });
   
   // assets
-  // sprites
-  k.loadSprite("bean", "sprites/bean.png");
-  k.loadSprite("bomb", "sprites/bomb.png");
-  k.loadSprite("lemon", "sprites/lemon.png");
-  k.loadSprite("gazer", "sprites/gazer.png");
-  k.loadSprite("ghosty", "sprites/ghosty.png");
-  
+  // sprites  
   k.loadSpriteAtlas("sprites/spritesheet.png", {
     "cake": {
       height: SPRITESHEET_SIZE,
       width: SPRITESHEET_SIZE,
       x: SPRITESHEET_SIZE * 0,
+      y: SPRITESHEET_SIZE * 0
+    },
+    "heart": {
+      height: SPRITESHEET_SIZE,
+      width: SPRITESHEET_SIZE,
+      x: SPRITESHEET_SIZE,
       y: SPRITESHEET_SIZE * 0
     },
     "enzo": {
