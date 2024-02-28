@@ -282,6 +282,12 @@ const main = async ({ debug = true }) => {
       x: SPRITESHEET_SIZE,
       y: SPRITESHEET_SIZE * 0
     },
+    "microphone": {
+      height: SPRITESHEET_SIZE,
+      width: SPRITESHEET_SIZE,
+      x: SPRITESHEET_SIZE * 2,
+      y: SPRITESHEET_SIZE * 0
+    },
     "enzo": {
       height: SPRITESHEET_SIZE,
       width: SPRITESHEET_SIZE,
@@ -428,30 +434,39 @@ const main = async ({ debug = true }) => {
     k.color(k.Color.fromHex("#e14141"))
   ]);
 
-  const volumeDisplay = k.add([
-    k.pos(k.width() - 12, k.height() - 10),
-    k.rect(30, 80),
+  const darkRed = k.Color.fromHex("#7a213a");
+  const red = k.Color.fromHex("#e14141");
+  const orange = k.Color.fromHex("#ffbf36");
+  const yellow = k.Color.fromHex("#fff275");
+
+  const volumeDisplayHeight = FLOOR_SIZE - iconPadding * 2;
+
+  const iconVolume = k.add([
+    k.sprite("microphone", {
+      width: SPRITE_SCALED_SIZE,
+      height: SPRITE_SCALED_SIZE
+    }),
+    k.pos(k.width() - iconPadding * 6, uiLifeHeight + 4),
+    k.anchor("right")
+  ])
+  
+  const rulerTemplate = [
+    k.pos(k.width() - iconPadding, k.height() - iconPadding),
     k.anchor("botright"),
-    k.color(k.Color.RED)
+  ]
+
+  k.add([...rulerTemplate, k.color(darkRed), k.rect(32, volumeDisplayHeight)]);
+  k.add([...rulerTemplate, k.color(red),     k.rect(32, volumeDisplayHeight * MIC_LEVEL_3)]);
+  k.add([...rulerTemplate, k.color(orange),  k.rect(32, volumeDisplayHeight * MIC_LEVEL_2)]);
+  k.add([...rulerTemplate, k.color(yellow),  k.rect(32, volumeDisplayHeight * MIC_LEVEL_1)]);
+
+  const volumeDisplay = k.add([
+    k.pos(k.width() - iconPadding * 4, k.height() - iconPadding),
+    k.rect(32, volumeDisplayHeight),
+    k.anchor("botright"),
+    k.color(k.Color.WHITE),
+    k.outline(4, k.Color.fromHex("#372538"))
   ]);
-
-  {
-    const darkRed = k.Color.fromArray([179, 9, 0]);
-    const red = k.Color.RED;
-    const orange = k.Color.fromArray([255, 101, 0]);
-    const yellow = k.Color.YELLOW;
-    
-    const rulerTemplate = [
-      k.pos(k.width() - 10, k.height() - 10),
-      k.anchor("botright"),
-    ]
-
-    // rulers
-    k.add([...rulerTemplate, k.color(darkRed), k.rect(2, 80)]);
-    k.add([...rulerTemplate, k.color(red),     k.rect(2, 80 * MIC_LEVEL_3)]);
-    k.add([...rulerTemplate, k.color(orange),  k.rect(2, 80 * MIC_LEVEL_2)]);
-    k.add([...rulerTemplate, k.color(yellow),  k.rect(2, 80 * MIC_LEVEL_1)]);
-  }
 
   // enemies
   if (debug) {
@@ -545,5 +560,5 @@ const main = async ({ debug = true }) => {
 }
 
 main({
-  debug: true
+  debug: false
 });
