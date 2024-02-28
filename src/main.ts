@@ -47,6 +47,10 @@ const SPRITE_SCALED_SIZE = SPRITESHEET_SIZE * SPRITE_SCALING;
 
 type SpawnPattern = 'both' | 'walking' | 'flying';
 
+export const randPitch = (k: KaboomCtx) => ({
+  detune: k.randi(0, 12) * 100,
+});
+
 export const addPlayer = (k: KaboomCtx) => {
   const player = k.add([
     "player",
@@ -111,18 +115,21 @@ export const addPlayer = (k: KaboomCtx) => {
   player.onCollide("projectile", (projectile, collision) => {
     // TODO: death
     player.hurt(ENEMY_DAMAGE);
-    k.addKaboom(player.pos);
     projectile.destroy();
   });
 
   player.onCollide("collectible", (collectible, collision) => {
-    // TODO: sound fx
     player.collected = player.collected + 1;
     player.heal(COLLECTIBLE_HEAL);
+    if (player.hp() > player.maxHP()) {
+      player.setHP(player.maxHP());
+    }
+    k.play('pickup', randPitch(k));
     collectible.destroy();
   });
 
   player.onHurt(() => {
+    k.play("hurt", randPitch(k));
     k.shake(30);
   });
 
@@ -260,6 +267,7 @@ const main = async ({ debug = true }) => {
     maxFPS: GAME_FPS
   });
   
+  // assets
   // sprites
   k.loadSprite("bean", "sprites/bean.png");
   k.loadSprite("bomb", "sprites/bomb.png");
@@ -299,6 +307,11 @@ const main = async ({ debug = true }) => {
       y: SPRITESHEET_SIZE
     },
   });
+
+  // sounds
+  k.loadSound("hurt", "sfx/hitHurt.wav");
+  k.loadSound("pickup", "sfx/pickupCoin.wav");
+  k.loadSound("music", "music/Halloween Birthday.wav");
 
   // game configs
   k.setGravity(GAME_GRAVITY);
@@ -492,6 +505,12 @@ const main = async ({ debug = true }) => {
     if (tryingToJump && player.isGrounded()) {
       player.jump(PLAYER_JUMP_STRENGTH);
     }
+  });
+
+  // autostart
+  k.play("music", {
+    loop: true,
+    volume: .3,
   });
 }
 
