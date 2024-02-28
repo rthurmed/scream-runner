@@ -66,9 +66,9 @@ export const addPlayer = (k: KaboomCtx) => {
     k.body({
       mass: .5
     }),
+    k.health(PLAYER_LIFE),
     k.state("idle", ["idle", "walk", "run"]),
     {
-      life: PLAYER_LIFE,
       collected: 0,
       destX: PLAYER_MIN_POSITION,
       updateState(volume: number) {
@@ -110,7 +110,7 @@ export const addPlayer = (k: KaboomCtx) => {
 
   player.onCollide("projectile", (projectile, collision) => {
     // TODO: death
-    player.life = player.life - ENEMY_DAMAGE;
+    player.hurt(ENEMY_DAMAGE);
     k.addKaboom(player.pos);
     projectile.destroy();
   });
@@ -118,12 +118,12 @@ export const addPlayer = (k: KaboomCtx) => {
   player.onCollide("collectible", (collectible, collision) => {
     // TODO: sound fx
     player.collected = player.collected + 1;
-    let healed = player.life + COLLECTIBLE_HEAL;
-    if (healed > PLAYER_LIFE) {
-      healed = PLAYER_LIFE;
-    }
-    player.life = healed;
+    player.heal(COLLECTIBLE_HEAL);
     collectible.destroy();
+  });
+
+  player.onHurt(() => {
+    k.shake(30);
   });
 
   return player;
@@ -424,6 +424,8 @@ const main = async ({ debug = true }) => {
     k.loop(ENEMY_FALLING_SPAWN_RATE, () => {
       const spawnXPosition = k.choose([
         PLAYER_MIN_POSITION,
+        PLAYER_MIN_POSITION,
+        PLAYER_MIN_POSITION,
         PLAYER_WALK_POSITION,
         PLAYER_WALK_POSITION,
         PLAYER_MAX_POSITION,
@@ -479,7 +481,7 @@ const main = async ({ debug = true }) => {
     volumeDisplay.height = volume * 80;
 
     // update life display
-    lifeDisplay.width = UI_LIFE_WIDTH * (player.life / PLAYER_LIFE);
+    lifeDisplay.width = UI_LIFE_WIDTH * (player.hp() / player.maxHP());
 
     // player movement
     player.updateState(volume);
