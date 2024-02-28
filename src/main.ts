@@ -8,7 +8,7 @@ const GAME_BACKGROUND = [56, 152, 255];
 const GAME_FPS = 60;
 const GAME_TICK = 1/GAME_FPS;
 const GAME_INITIAL_TIME = 5; // s
-const FLOOR_SIZE = GAME_HEIGHT / 5;
+const FLOOR_SIZE = 32 * 4;
 const BOUNDARY_SIZE = 300;
 const MIC_LEVEL_1 = .15;
 const MIC_LEVEL_2 = .4;
@@ -40,7 +40,7 @@ const COLLECTIBLE_INITIAL_TIME = GAME_INITIAL_TIME * .5;
 const COLLECTIBLE_SPAWN_RATE = 2;
 const COLLECTIBLE_HEAL = ENEMY_DAMAGE / 3;
 const UI_LIFE_WIDTH = 400;
-const UI_LIFE_HEIGHT = 16;
+const UI_LIFE_HEIGHT = 32;
 const SPRITESHEET_SIZE = 32;
 const SPRITE_SCALING = 4;
 const SPRITE_SCALED_SIZE = SPRITESHEET_SIZE * SPRITE_SCALING;
@@ -385,17 +385,45 @@ const main = async ({ debug = true }) => {
   const player = addPlayer(k);
 
   // ui
+  const quarterSpriteSize = SPRITE_SCALED_SIZE/4;
+
+  const uiLifeHeight = k.height() - quarterSpriteSize * 3;
+  const uiCollectibleHeight = k.height() - quarterSpriteSize;
+
+  const iconLife = k.add([
+    k.sprite("heart", {
+      width: SPRITE_SCALED_SIZE,
+      height: SPRITE_SCALED_SIZE
+    }),
+    k.pos(-quarterSpriteSize + 6, uiLifeHeight),
+    k.anchor("left")
+  ]);
+
+  const iconCollectible = k.add([
+    k.sprite("cake", {
+      width: SPRITE_SCALED_SIZE,
+      height: SPRITE_SCALED_SIZE
+    }),
+    k.pos(-quarterSpriteSize + 6, uiCollectibleHeight),
+    k.anchor("left")
+  ]);
+  const textCollectible = k.add([
+    k.text("11"),
+    k.pos(quarterSpriteSize * 2.5, uiCollectibleHeight),
+    k.anchor("left")
+  ])
+
   const lifeBackground = k.add([
-    k.pos(12, k.height() - 10),
+    k.pos(quarterSpriteSize * 2.5, uiLifeHeight),
     k.rect(UI_LIFE_WIDTH, UI_LIFE_HEIGHT),
-    k.anchor("botleft"),
+    k.anchor("left"),
     k.color(k.Color.fromHex("#7A213A"))
   ]);
 
   const lifeDisplay = k.add([
-    k.pos(12, k.height() - 10),
+    k.pos(quarterSpriteSize * 2.5, uiLifeHeight),
     k.rect(UI_LIFE_WIDTH, UI_LIFE_HEIGHT),
-    k.anchor("botleft"),
+    k.anchor("left"),
     k.color(k.Color.fromHex("#e14141"))
   ]);
 
