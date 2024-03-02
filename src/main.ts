@@ -63,6 +63,7 @@ export const randPitch = (k: KaboomCtx) => ({
 });
 
 export const addPlayer = (k: KaboomCtx, game: Game) => {
+  const initialPos = k.vec2(k.width() / 2, k.height() / 2 + 100 - (UI_ICON_PADDING * 4))
   const player = game.add([
     "player",
     k.sprite("enzo", {
@@ -71,7 +72,8 @@ export const addPlayer = (k: KaboomCtx, game: Game) => {
     }),
     k.opacity(1),
     k.anchor("bot"),
-    k.pos(k.width() / 2, k.height() / 2 + 100 - (UI_ICON_PADDING * 4)),
+    k.pos(initialPos),
+    k.offscreen({ distance: 0 }),
     k.area({
       shape: new k.Rect(
         k.vec2(0, 0),
@@ -157,6 +159,12 @@ export const addPlayer = (k: KaboomCtx, game: Game) => {
     game.wait(PLAYER_DEATH_TIMEOUT, () => {
       k.go("gameover");
     });
+  });
+
+  player.onExitScreen(() => {
+    // sometimes when the game was put on background the player would fly
+    // offscreen and never come back. this callback fix this.
+    player.pos = initialPos;
   });
 
   return player;
