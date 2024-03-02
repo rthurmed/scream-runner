@@ -46,6 +46,8 @@ const UI_BAR_WIDTH = 32;
 const SPRITESHEET_SIZE = 32;
 const SPRITE_SCALING = 4;
 const SPRITE_SCALED_SIZE = SPRITESHEET_SIZE * SPRITE_SCALING;
+const ICONSHEET_SIZE = 16;
+const ICON_SCALED_SIZE = ICONSHEET_SIZE * SPRITE_SCALING;
 const QUARTER_SPRITE_SIZE = SPRITE_SCALED_SIZE/4;
 
 type SpawnPattern = 'both' | 'walking' | 'flying';
@@ -418,10 +420,27 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
       k.opacity(0),
     ]);
 
-    k.onKeyRelease("p", () => {
+    const pauseButton = pauseMenu.add([
+      "pause-button",
+      k.opacity(1),
+      k.pos(k.width() - UI_ICON_PADDING, UI_ICON_PADDING),
+      k.anchor("topright"),
+      k.sprite("icon-pause", {
+        height: ICON_SCALED_SIZE,
+        width: ICON_SCALED_SIZE,
+        frame: 0,
+      }),
+      k.area()
+    ]);
+
+    const togglePause = () => {
       game.paused = !game.paused;
       pauseMenu.opacity = game.paused ? .5 : 0;
-    });
+      pauseButton.frame = game.paused ? 1 : 0;
+    }
+
+    k.onClick("pause-button", togglePause);
+    k.onKeyRelease("p", togglePause);
 
     // enemies
     if (debug) {
@@ -613,6 +632,48 @@ const main = async ({ debug = true }) => {
       width: SPRITESHEET_SIZE,
       x: SPRITESHEET_SIZE * 3,
       y: SPRITESHEET_SIZE
+    },
+  });
+
+  k.loadSpriteAtlas("sprites/buttons.png", {
+    "icon-sfx": {
+      height: ICONSHEET_SIZE * 2,
+      width: ICONSHEET_SIZE,
+      x: ICONSHEET_SIZE * 0,
+      y: ICONSHEET_SIZE * 0,
+      sliceY: 2,
+      anims: {
+        toggle: {
+          from: 0,
+          to: 1
+        }
+      }
+    },
+    "icon-music": {
+      height: ICONSHEET_SIZE * 2,
+      width: ICONSHEET_SIZE,
+      x: ICONSHEET_SIZE * 1,
+      y: ICONSHEET_SIZE * 0,
+      sliceY: 2,
+      anims: {
+        toggle: {
+          from: 0,
+          to: 1
+        }
+      }
+    },
+    "icon-pause": {
+      height: ICONSHEET_SIZE * 2,
+      width: ICONSHEET_SIZE,
+      x: ICONSHEET_SIZE * 2,
+      y: ICONSHEET_SIZE * 0,
+      sliceY: 2,
+      anims: {
+        toggle: {
+          from: 0,
+          to: 1
+        }
+      }
     },
   });
 
