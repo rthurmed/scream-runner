@@ -410,8 +410,17 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
       k.outline(4, k.Color.fromHex("#372538"))
     ]);
 
+    // pause
+    const pauseMenu = k.add([
+      k.rect(k.width(), k.height()),
+      k.pos(0, 0),
+      k.color(k.Color.fromHex("#372538")),
+      k.opacity(0),
+    ]);
+
     k.onKeyRelease("p", () => {
       game.paused = !game.paused;
+      pauseMenu.opacity = game.paused ? .5 : 0;
     });
 
     // enemies
