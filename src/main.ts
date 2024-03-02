@@ -1,4 +1,4 @@
-import kaboom, { GameObj, KaboomCtx, OpacityComp } from "kaboom";
+import kaboom, { GameObj, KaboomCtx, OpacityComp, TimerComp } from "kaboom";
 import { IMicrophone, Microphone } from "./microphone";
 
 const GAME_WIDTH = 800;
@@ -54,8 +54,8 @@ export const randPitch = (k: KaboomCtx) => ({
   detune: k.randi(0, 12) * 100,
 });
 
-export const addPlayer = (k: KaboomCtx) => {
-  const player = k.add([
+export const addPlayer = (k: KaboomCtx, game: GameObj<TimerComp>) => {
+  const player = game.add([
     "player",
     k.sprite("enzo", {
       width: SPRITE_SCALED_SIZE,
@@ -141,7 +141,7 @@ export const addPlayer = (k: KaboomCtx) => {
     player.opacity = 0;
     player.paused = true;
     player.isStatic = true;
-    k.wait(PLAYER_DEATH_TIMEOUT, () => {
+    game.wait(PLAYER_DEATH_TIMEOUT, () => {
       k.go("gameover");
     });
   });
@@ -151,6 +151,7 @@ export const addPlayer = (k: KaboomCtx) => {
 
 export const timedOutAttack = (
   k: KaboomCtx,
+  game: GameObj<TimerComp>,
   obj: GameObj<OpacityComp>,
   timeout = ENEMY_ATTACK_TIMEOUT,
   opacity = ENEMY_AIM_OPACITY
@@ -158,14 +159,14 @@ export const timedOutAttack = (
   obj.opacity = opacity;
   obj.paused = true;
 
-  k.wait(timeout, () => {
+  game.wait(timeout, () => {
     obj.paused = false;
     obj.opacity = 1;
   });
 }
 
-export const addFallingEnemy = (k: KaboomCtx, x: number) => {
-  const enemy = k.add([
+export const addFallingEnemy = (k: KaboomCtx, game: GameObj<TimerComp>, x: number) => {
+  const enemy = game.add([
     "enemy",
     "projectile",
     k.pos(x, ENEMY_FALLING_Y),
@@ -187,13 +188,13 @@ export const addFallingEnemy = (k: KaboomCtx, x: number) => {
     k.offscreen({ destroy: true }),
   ]);
 
-  timedOutAttack(k, enemy);
+  timedOutAttack(k, game, enemy);
 
   return enemy;
 }
 
-export const addWalkingEnemy = (k: KaboomCtx) => {
-  const enemy = k.add([
+export const addWalkingEnemy = (k: KaboomCtx, game: GameObj<TimerComp>) => {
+  const enemy = game.add([
     "enemy",
     "projectile",
     k.pos(ENEMY_RIGHT_STARTING_X, k.height() - FLOOR_SIZE),
@@ -215,13 +216,13 @@ export const addWalkingEnemy = (k: KaboomCtx) => {
     k.offscreen({ destroy: true }),
   ]);
 
-  timedOutAttack(k, enemy);
+  timedOutAttack(k, game, enemy);
 
   return enemy;
 }
 
-export const addFlyingEnemy = (k: KaboomCtx) => {
-  const enemy = k.add([
+export const addFlyingEnemy = (k: KaboomCtx, game: GameObj<TimerComp>) => {
+  const enemy = game.add([
     "enemy",
     "projectile",
     k.pos(ENEMY_RIGHT_STARTING_X, k.height() - FLOOR_SIZE - ENEMY_FLYING_HEIGHT),
@@ -243,13 +244,13 @@ export const addFlyingEnemy = (k: KaboomCtx) => {
     k.offscreen({ destroy: true }),
   ]);
 
-  timedOutAttack(k, enemy);
+  timedOutAttack(k, game, enemy);
 
   return enemy;
 }
 
-export const addCoin = (k: KaboomCtx) => { 
-  const coin = k.add([
+export const addCoin = (k: KaboomCtx, game: GameObj<TimerComp>) => { 
+  const coin = game.add([
     "coin",
     "collectible",
     k.pos(k.width(), k.randi(COLLECTIBLE_Y_MIN, COLLECTIBLE_Y_MAX)),
@@ -274,8 +275,12 @@ export const addCoin = (k: KaboomCtx) => {
 
 const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = false) => {
   return () => {
+    const game = k.add([
+      k.timer()
+    ]);
+
     // boundaries
-    const floor = k.add([
+    const floor = game.add([
       "structure",
       k.pos(-BOUNDARY_SIZE, k.height() - FLOOR_SIZE),
       k.rect(k.width() + (BOUNDARY_SIZE * 2), FLOOR_SIZE),
@@ -286,7 +291,7 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
       })
     ]);
     const boundaries = [
-      k.add([ // left boundary
+      game.add([ // left boundary
         "boundary",
         k.pos(-BOUNDARY_SIZE, -BOUNDARY_SIZE),
         k.rect(BOUNDARY_SIZE, k.height() + (BOUNDARY_SIZE * 2)),
@@ -295,7 +300,7 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
           isStatic: true
         })
       ]),
-      k.add([ // right boundary
+      game.add([ // right boundary
         "boundary",
         k.pos(k.width(), -BOUNDARY_SIZE),
         k.rect(BOUNDARY_SIZE, k.height() + (BOUNDARY_SIZE * 2)),
@@ -304,7 +309,7 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
           isStatic: true
         })
       ]),
-      k.add([ // bottom boundary
+      game.add([ // bottom boundary
         "boundary",
         k.pos(-BOUNDARY_SIZE, k.height()),
         k.rect(k.width() + (BOUNDARY_SIZE * 2), BOUNDARY_SIZE),
@@ -313,7 +318,7 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
           isStatic: true
         })
       ]),
-      k.add([ // top boundary
+      game.add([ // top boundary
         "boundary",
         k.pos(-BOUNDARY_SIZE, -BOUNDARY_SIZE),
         k.rect(k.width() + (BOUNDARY_SIZE * 2), BOUNDARY_SIZE),
@@ -325,13 +330,13 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
     ];
 
     // player
-    const player = addPlayer(k);
+    const player = addPlayer(k, game);
 
     // ui
     const uiLifeHeight = k.height() - QUARTER_SPRITE_SIZE * 2;
     const uiCollectibleHeight = QUARTER_SPRITE_SIZE + UI_ICON_PADDING;
 
-    const iconLife = k.add([
+    const iconLife = game.add([
       k.sprite("heart", {
         width: SPRITE_SCALED_SIZE,
         height: SPRITE_SCALED_SIZE
@@ -341,7 +346,7 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
     ]);
 
     // NOTE: hidden
-    const iconCollectible = k.add([
+    const iconCollectible = game.add([
       k.opacity(0),
       k.sprite("cake", {
         width: SPRITE_SCALED_SIZE,
@@ -350,7 +355,7 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
       k.pos(-QUARTER_SPRITE_SIZE + UI_ICON_PADDING, uiCollectibleHeight),
       k.anchor("left")
     ]);
-    const textCollectible = k.add([
+    const textCollectible = game.add([
       k.text("Score: 0", {
         size: 24,
       }),
@@ -359,14 +364,14 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
       k.anchor("left"),
     ])
 
-    const lifeBackground = k.add([
+    const lifeBackground = game.add([
       k.pos(QUARTER_SPRITE_SIZE * 2.5, k.height() - UI_ICON_PADDING),
       k.rect(UI_BAR_WIDTH, UI_BAR_HEIGHT),
       k.anchor("botleft"),
       k.color(k.Color.fromHex("#7A213A"))
     ]);
 
-    const lifeDisplay = k.add([
+    const lifeDisplay = game.add([
       k.pos(QUARTER_SPRITE_SIZE * 2.5, k.height() - UI_ICON_PADDING),
       k.rect(UI_BAR_WIDTH, UI_BAR_HEIGHT),
       k.anchor("botleft"),
@@ -378,7 +383,7 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
     const orange = k.Color.fromHex("#ffbf36");
     const yellow = k.Color.fromHex("#fff275");
 
-    const iconVolume = k.add([
+    const iconVolume = game.add([
       k.sprite("microphone", {
         width: SPRITE_SCALED_SIZE,
         height: SPRITE_SCALED_SIZE
@@ -392,12 +397,12 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
       k.anchor("botright"),
     ]
 
-    k.add([...rulerTemplate, k.color(darkRed), k.rect(UI_BAR_WIDTH, UI_BAR_HEIGHT)]);
-    k.add([...rulerTemplate, k.color(red),     k.rect(UI_BAR_WIDTH, UI_BAR_HEIGHT * MIC_LEVEL_3)]);
-    k.add([...rulerTemplate, k.color(orange),  k.rect(UI_BAR_WIDTH, UI_BAR_HEIGHT * MIC_LEVEL_2)]);
-    k.add([...rulerTemplate, k.color(yellow),  k.rect(UI_BAR_WIDTH, UI_BAR_HEIGHT * MIC_LEVEL_1)]);
+    game.add([...rulerTemplate, k.color(darkRed), k.rect(UI_BAR_WIDTH, UI_BAR_HEIGHT)]);
+    game.add([...rulerTemplate, k.color(red),     k.rect(UI_BAR_WIDTH, UI_BAR_HEIGHT * MIC_LEVEL_3)]);
+    game.add([...rulerTemplate, k.color(orange),  k.rect(UI_BAR_WIDTH, UI_BAR_HEIGHT * MIC_LEVEL_2)]);
+    game.add([...rulerTemplate, k.color(yellow),  k.rect(UI_BAR_WIDTH, UI_BAR_HEIGHT * MIC_LEVEL_1)]);
 
-    const volumeDisplay = k.add([
+    const volumeDisplay = game.add([
       k.pos(k.width() - UI_ICON_PADDING * 4, k.height() - UI_ICON_PADDING),
       k.rect(UI_BAR_WIDTH, UI_BAR_HEIGHT),
       k.anchor("botright"),
@@ -405,17 +410,21 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
       k.outline(4, k.Color.fromHex("#372538"))
     ]);
 
+    k.onKeyRelease("p", () => {
+      game.paused = !game.paused;
+    });
+
     // enemies
     if (debug) {
-      k.onKeyPress('1', () => (addFallingEnemy(k, PLAYER_MIN_POSITION)));
-      k.onKeyPress('2', () => (addFallingEnemy(k, PLAYER_WALK_POSITION)));
-      k.onKeyPress('3', () => (addFallingEnemy(k, PLAYER_MAX_POSITION)));
-      k.onKeyPress('4', () => (addWalkingEnemy(k)));
-      k.onKeyPress('5', () => (addFlyingEnemy(k)));
+      k.onKeyPress('1', () => (addFallingEnemy(k, game, PLAYER_MIN_POSITION)));
+      k.onKeyPress('2', () => (addFallingEnemy(k, game, PLAYER_WALK_POSITION)));
+      k.onKeyPress('3', () => (addFallingEnemy(k, game, PLAYER_MAX_POSITION)));
+      k.onKeyPress('4', () => (addWalkingEnemy(k, game)));
+      k.onKeyPress('5', () => (addFlyingEnemy(k, game)));
     }
     
-    k.wait(GAME_INITIAL_TIME, () => {
-      k.loop(ENEMY_FALLING_SPAWN_RATE, () => {
+    game.wait(GAME_INITIAL_TIME, () => {
+      game.loop(ENEMY_FALLING_SPAWN_RATE, () => {
         const spawnXPosition = k.choose([
           PLAYER_MIN_POSITION,
           PLAYER_MIN_POSITION,
@@ -424,12 +433,12 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
           PLAYER_WALK_POSITION,
           PLAYER_MAX_POSITION,
         ])
-        addFallingEnemy(k, spawnXPosition);
+        addFallingEnemy(k, game, spawnXPosition);
       });
     });
 
-    k.wait(ENEMY_HORIZONTAL_INITIAL_TIME, () => {
-      k.loop(ENEMY_HORIZONTAL_SPAWN_RATE, () => {
+    game.wait(ENEMY_HORIZONTAL_INITIAL_TIME, () => {
+      game.loop(ENEMY_HORIZONTAL_SPAWN_RATE, () => {
         const spawnPattern: SpawnPattern = k.choose([
           'both',
           'flying',
@@ -439,23 +448,23 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
           'walking',
         ]);
         if (spawnPattern == 'flying' || spawnPattern == 'both') {
-          addFlyingEnemy(k);
+          addFlyingEnemy(k, game);
         }
         if (spawnPattern == 'walking' || spawnPattern == 'both') {
-          addWalkingEnemy(k);
+          addWalkingEnemy(k, game);
         }
       });
     });
 
     // collectibles
     if (debug) {
-      k.onKeyPress('q', () => (addCoin(k)));
+      k.onKeyPress('q', () => (addCoin(k, game)));
     }
 
-    k.wait(COLLECTIBLE_INITIAL_TIME, () => {
-      k.loop(COLLECTIBLE_SPAWN_RATE, () => {
+    game.wait(COLLECTIBLE_INITIAL_TIME, () => {
+      game.loop(COLLECTIBLE_SPAWN_RATE, () => {
         if (k.chance(.75)) {
-          addCoin(k);
+          addCoin(k, game);
         }
       });
     });
@@ -466,6 +475,10 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
 
     // game loop
     k.loop(GAME_TICK, () => {
+      if (game.paused) {
+        return;
+      }
+
       // manage volume
       const rawVolume = microphone.getVolume();
       const speed = rawVolume > volume ? VOLUME_RAISE : VOLUME_DECAY;
@@ -619,7 +632,7 @@ const main = async ({ debug = true }) => {
   k.scene("start", makeStartScene(k, microphone, debug));
   k.scene("gameover", makeGameoverScene(k, microphone, debug));
 
-  k.go("start");
+  k.go("game");
 }
 
 main({
