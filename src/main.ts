@@ -543,6 +543,8 @@ const makeGameoverScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean
         align: "center",
         letterSpacing: 8,
       }),
+      k.opacity(1),
+      k.fadeIn(1),
       k.pos(k.width() / 2, k.height() / 2),
       k.anchor("center")
     ]);
