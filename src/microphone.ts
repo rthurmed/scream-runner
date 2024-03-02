@@ -1,7 +1,11 @@
 const ANALYSER_FFT = 2048;
 const ANALYSER_BASE = 128.0;
 
-export const Microphone = async () => {
+export interface IMicrophone {
+  getVolume: () => number
+}
+
+export const Microphone = async (): Promise<IMicrophone> => {
   if (!('getUserMedia' in navigator.mediaDevices)) {
     throw Error('MediaDevices.getUserMedia() not supported on your browser!');
   }
