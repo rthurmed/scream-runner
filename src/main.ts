@@ -10,6 +10,7 @@ const GAME_TICK = 1/GAME_FPS;
 const GAME_INITIAL_TIME = 5; // s
 const FLOOR_SIZE = GAME_HEIGHT / 5;
 const BOUNDARY_SIZE = 300;
+const BOUNDARY_COLOR = [55, 37, 56];
 const MIC_LEVEL_1 = .15;
 const MIC_LEVEL_2 = .4;
 const MIC_LEVEL_3 = .7;
@@ -315,42 +316,34 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
         isStatic: true
       })
     ]);
+    const baseBoundary = [
+      "boundary",
+      k.area(),
+      k.color(k.Color.fromArray(BOUNDARY_COLOR)),
+      k.body({
+        isStatic: true
+      })
+    ]
     const boundaries = [
       game.add([ // left boundary
-        "boundary",
         k.pos(-BOUNDARY_SIZE, -BOUNDARY_SIZE),
         k.rect(BOUNDARY_SIZE, k.height() + (BOUNDARY_SIZE * 2)),
-        k.area(),
-        k.body({
-          isStatic: true
-        })
+        ...baseBoundary
       ]),
       game.add([ // right boundary
-        "boundary",
         k.pos(k.width(), -BOUNDARY_SIZE),
         k.rect(BOUNDARY_SIZE, k.height() + (BOUNDARY_SIZE * 2)),
-        k.area(),
-        k.body({
-          isStatic: true
-        })
+        ...baseBoundary
       ]),
       game.add([ // bottom boundary
-        "boundary",
         k.pos(-BOUNDARY_SIZE, k.height()),
         k.rect(k.width() + (BOUNDARY_SIZE * 2), BOUNDARY_SIZE),
-        k.area(),
-        k.body({
-          isStatic: true
-        })
+        ...baseBoundary
       ]),
       game.add([ // top boundary
-        "boundary",
         k.pos(-BOUNDARY_SIZE, -BOUNDARY_SIZE),
         k.rect(k.width() + (BOUNDARY_SIZE * 2), BOUNDARY_SIZE),
-        k.area(),
-        k.body({
-          isStatic: true
-        })
+        ...baseBoundary
       ])
     ];
 
