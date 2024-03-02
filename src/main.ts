@@ -39,11 +39,13 @@ const COLLECTIBLE_MOVE_SPEED = 200;
 const COLLECTIBLE_INITIAL_TIME = GAME_INITIAL_TIME * .5;
 const COLLECTIBLE_SPAWN_RATE = 2;
 const COLLECTIBLE_HEAL = ENEMY_DAMAGE / 3;
-const UI_LIFE_WIDTH = 400;
-const UI_LIFE_HEIGHT = 32;
+const UI_ICON_PADDING = 6;
+const UI_BAR_HEIGHT = FLOOR_SIZE - UI_ICON_PADDING * 2;
+const UI_BAR_WIDTH = 32;
 const SPRITESHEET_SIZE = 32;
 const SPRITE_SCALING = 4;
 const SPRITE_SCALED_SIZE = SPRITESHEET_SIZE * SPRITE_SCALING;
+const QUARTER_SPRITE_SIZE = SPRITE_SCALED_SIZE/4;
 
 type SpawnPattern = 'both' | 'walking' | 'flying';
 
@@ -391,46 +393,48 @@ const main = async ({ debug = true }) => {
   const player = addPlayer(k);
 
   // ui
-  const quarterSpriteSize = SPRITE_SCALED_SIZE/4;
-  const iconPadding = 6;
-
-  const uiLifeHeight = k.height() - quarterSpriteSize * 2;
-  const uiCollectibleHeight = quarterSpriteSize + iconPadding;
+  const uiLifeHeight = k.height() - QUARTER_SPRITE_SIZE * 2;
+  const uiCollectibleHeight = QUARTER_SPRITE_SIZE + UI_ICON_PADDING;
 
   const iconLife = k.add([
     k.sprite("heart", {
       width: SPRITE_SCALED_SIZE,
       height: SPRITE_SCALED_SIZE
     }),
-    k.pos(-quarterSpriteSize + iconPadding, uiLifeHeight),
+    k.pos(-QUARTER_SPRITE_SIZE + UI_ICON_PADDING, uiLifeHeight),
     k.anchor("left")
   ]);
 
+  // NOTE: hidden
   const iconCollectible = k.add([
+    k.opacity(0),
     k.sprite("cake", {
       width: SPRITE_SCALED_SIZE,
       height: SPRITE_SCALED_SIZE
     }),
-    k.pos(-quarterSpriteSize + iconPadding, uiCollectibleHeight),
+    k.pos(-QUARTER_SPRITE_SIZE + UI_ICON_PADDING, uiCollectibleHeight),
     k.anchor("left")
   ]);
   const textCollectible = k.add([
-    k.text("0"),
-    k.pos(quarterSpriteSize * 2.5, uiCollectibleHeight),
-    k.anchor("left")
+    k.text("Score: 0", {
+      size: 24,
+    }),
+    // k.pos(quarterSpriteSize * 2.5, uiCollectibleHeight),
+    k.pos(UI_ICON_PADDING * 3, uiCollectibleHeight),
+    k.anchor("left"),
   ])
 
   const lifeBackground = k.add([
-    k.pos(quarterSpriteSize * 2.5, uiLifeHeight),
-    k.rect(UI_LIFE_WIDTH, UI_LIFE_HEIGHT),
-    k.anchor("left"),
+    k.pos(QUARTER_SPRITE_SIZE * 2.5, k.height() - UI_ICON_PADDING),
+    k.rect(UI_BAR_WIDTH, UI_BAR_HEIGHT),
+    k.anchor("botleft"),
     k.color(k.Color.fromHex("#7A213A"))
   ]);
 
   const lifeDisplay = k.add([
-    k.pos(quarterSpriteSize * 2.5, uiLifeHeight),
-    k.rect(UI_LIFE_WIDTH, UI_LIFE_HEIGHT),
-    k.anchor("left"),
+    k.pos(QUARTER_SPRITE_SIZE * 2.5, k.height() - UI_ICON_PADDING),
+    k.rect(UI_BAR_WIDTH, UI_BAR_HEIGHT),
+    k.anchor("botleft"),
     k.color(k.Color.fromHex("#e14141"))
   ]);
 
@@ -439,30 +443,28 @@ const main = async ({ debug = true }) => {
   const orange = k.Color.fromHex("#ffbf36");
   const yellow = k.Color.fromHex("#fff275");
 
-  const volumeDisplayHeight = FLOOR_SIZE - iconPadding * 2;
-
   const iconVolume = k.add([
     k.sprite("microphone", {
       width: SPRITE_SCALED_SIZE,
       height: SPRITE_SCALED_SIZE
     }),
-    k.pos(k.width() - iconPadding * 6, uiLifeHeight + 4),
+    k.pos(k.width() - UI_ICON_PADDING * 6, uiLifeHeight + 4),
     k.anchor("right")
   ])
   
   const rulerTemplate = [
-    k.pos(k.width() - iconPadding, k.height() - iconPadding),
+    k.pos(k.width() - UI_ICON_PADDING, k.height() - UI_ICON_PADDING),
     k.anchor("botright"),
   ]
 
-  k.add([...rulerTemplate, k.color(darkRed), k.rect(32, volumeDisplayHeight)]);
-  k.add([...rulerTemplate, k.color(red),     k.rect(32, volumeDisplayHeight * MIC_LEVEL_3)]);
-  k.add([...rulerTemplate, k.color(orange),  k.rect(32, volumeDisplayHeight * MIC_LEVEL_2)]);
-  k.add([...rulerTemplate, k.color(yellow),  k.rect(32, volumeDisplayHeight * MIC_LEVEL_1)]);
+  k.add([...rulerTemplate, k.color(darkRed), k.rect(UI_BAR_WIDTH, UI_BAR_HEIGHT)]);
+  k.add([...rulerTemplate, k.color(red),     k.rect(UI_BAR_WIDTH, UI_BAR_HEIGHT * MIC_LEVEL_3)]);
+  k.add([...rulerTemplate, k.color(orange),  k.rect(UI_BAR_WIDTH, UI_BAR_HEIGHT * MIC_LEVEL_2)]);
+  k.add([...rulerTemplate, k.color(yellow),  k.rect(UI_BAR_WIDTH, UI_BAR_HEIGHT * MIC_LEVEL_1)]);
 
   const volumeDisplay = k.add([
-    k.pos(k.width() - iconPadding * 4, k.height() - iconPadding),
-    k.rect(32, volumeDisplayHeight),
+    k.pos(k.width() - UI_ICON_PADDING * 4, k.height() - UI_ICON_PADDING),
+    k.rect(UI_BAR_WIDTH, UI_BAR_HEIGHT),
     k.anchor("botright"),
     k.color(k.Color.WHITE),
     k.outline(4, k.Color.fromHex("#372538"))
@@ -538,8 +540,8 @@ const main = async ({ debug = true }) => {
     volumeDisplay.height = volume * 80;
 
     // update player display
-    lifeDisplay.width = UI_LIFE_WIDTH * (player.hp() / player.maxHP());
-    textCollectible.text = player.collected.toString();
+    lifeDisplay.height = UI_BAR_HEIGHT * (player.hp() / player.maxHP());
+    textCollectible.text = `Score: ${player.collected.toString()}`;
 
     // player movement
     player.updateState(volume);
