@@ -63,7 +63,7 @@ export const addPlayer = (k: KaboomCtx) => {
     }),
     k.opacity(1),
     k.anchor("bot"),
-    k.pos(100, 100),
+    k.pos(k.width() / 2, k.height() / 2 + 100 - (UI_ICON_PADDING * 4)),
     k.area({
       shape: new k.Rect(
         k.vec2(0, 0),
