@@ -49,14 +49,20 @@ const SPRITE_SCALED_SIZE = SPRITESHEET_SIZE * SPRITE_SCALING;
 const ICONSHEET_SIZE = 16;
 const ICON_SCALED_SIZE = ICONSHEET_SIZE * SPRITE_SCALING;
 const QUARTER_SPRITE_SIZE = SPRITE_SCALED_SIZE/4;
+const MUSIC_VOLUME = .3;
 
 type SpawnPattern = 'both' | 'walking' | 'flying';
+
+type Game = GameObj<TimerComp | {
+  music: boolean;
+  sfx: boolean;
+}>;
 
 export const randPitch = (k: KaboomCtx) => ({
   detune: k.randi(0, 12) * 100,
 });
 
-export const addPlayer = (k: KaboomCtx, game: GameObj<TimerComp>) => {
+export const addPlayer = (k: KaboomCtx, game: Game) => {
   const player = game.add([
     "player",
     k.sprite("enzo", {
@@ -81,6 +87,7 @@ export const addPlayer = (k: KaboomCtx, game: GameObj<TimerComp>) => {
     {
       collected: 0,
       destX: PLAYER_MIN_POSITION,
+      game: game,
       updateState(volume: number) {
         if (this.state == "idle") {
           if (volume > MIC_LEVEL_1) {
@@ -129,12 +136,16 @@ export const addPlayer = (k: KaboomCtx, game: GameObj<TimerComp>) => {
     if (player.hp() > player.maxHP()) {
       player.setHP(player.maxHP());
     }
-    k.play('pickup', randPitch(k));
+    if (player.game.sfx) {
+      k.play('pickup', randPitch(k));
+    }
     collectible.destroy();
   });
 
   player.onHurt(() => {
-    k.play("hurt", randPitch(k));
+    if (player.game.sfx) {
+      k.play("hurt", randPitch(k));
+    }
     k.shake(30);
   });
 
@@ -153,7 +164,7 @@ export const addPlayer = (k: KaboomCtx, game: GameObj<TimerComp>) => {
 
 export const timedOutAttack = (
   k: KaboomCtx,
-  game: GameObj<TimerComp>,
+  game: Game,
   obj: GameObj<OpacityComp>,
   timeout = ENEMY_ATTACK_TIMEOUT,
   opacity = ENEMY_AIM_OPACITY
@@ -167,7 +178,7 @@ export const timedOutAttack = (
   });
 }
 
-export const addFallingEnemy = (k: KaboomCtx, game: GameObj<TimerComp>, x: number) => {
+export const addFallingEnemy = (k: KaboomCtx, game: Game, x: number) => {
   const enemy = game.add([
     "enemy",
     "projectile",
@@ -195,7 +206,7 @@ export const addFallingEnemy = (k: KaboomCtx, game: GameObj<TimerComp>, x: numbe
   return enemy;
 }
 
-export const addWalkingEnemy = (k: KaboomCtx, game: GameObj<TimerComp>) => {
+export const addWalkingEnemy = (k: KaboomCtx, game: Game) => {
   const enemy = game.add([
     "enemy",
     "projectile",
@@ -223,7 +234,7 @@ export const addWalkingEnemy = (k: KaboomCtx, game: GameObj<TimerComp>) => {
   return enemy;
 }
 
-export const addFlyingEnemy = (k: KaboomCtx, game: GameObj<TimerComp>) => {
+export const addFlyingEnemy = (k: KaboomCtx, game: Game) => {
   const enemy = game.add([
     "enemy",
     "projectile",
@@ -251,7 +262,7 @@ export const addFlyingEnemy = (k: KaboomCtx, game: GameObj<TimerComp>) => {
   return enemy;
 }
 
-export const addCoin = (k: KaboomCtx, game: GameObj<TimerComp>) => { 
+export const addCoin = (k: KaboomCtx, game: Game) => { 
   const coin = game.add([
     "coin",
     "collectible",
@@ -277,8 +288,12 @@ export const addCoin = (k: KaboomCtx, game: GameObj<TimerComp>) => {
 
 const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = false) => {
   return () => {
-    const game = k.add([
-      k.timer()
+    const game: Game = k.add([
+      k.timer(),
+      {
+        music: true,
+        sfx: true,
+      }
     ]);
 
     // boundaries
@@ -420,8 +435,35 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
       k.opacity(0),
     ]);
 
-    const pauseButton = pauseMenu.add([
-      "pause-button",
+    // pause actions bar
+    const sfxToggle = pauseMenu.add([
+      "sfx-toggle",
+      k.opacity(1),
+      k.pos(k.width() - UI_ICON_PADDING - (ICON_SCALED_SIZE * 2), UI_ICON_PADDING),
+      k.anchor("topright"),
+      k.sprite("icon-sfx", {
+        height: ICON_SCALED_SIZE,
+        width: ICON_SCALED_SIZE,
+        frame: game.sfx ? 0 : 1,
+      }),
+      k.area()
+    ]);
+
+    const musicToggle = pauseMenu.add([
+      "music-toggle",
+      k.opacity(1),
+      k.pos(k.width() - UI_ICON_PADDING - (ICON_SCALED_SIZE * 1), UI_ICON_PADDING),
+      k.anchor("topright"),
+      k.sprite("icon-music", {
+        height: ICON_SCALED_SIZE,
+        width: ICON_SCALED_SIZE,
+        frame: game.music ? 0 : 1,
+      }),
+      k.area()
+    ]);
+
+    const pauseToggle = pauseMenu.add([
+      "pause-toggle",
       k.opacity(1),
       k.pos(k.width() - UI_ICON_PADDING, UI_ICON_PADDING),
       k.anchor("topright"),
@@ -436,11 +478,21 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
     const togglePause = () => {
       game.paused = !game.paused;
       pauseMenu.opacity = game.paused ? .5 : 0;
-      pauseButton.frame = game.paused ? 1 : 0;
+      pauseToggle.frame = game.paused ? 1 : 0;
     }
 
-    k.onClick("pause-button", togglePause);
+    k.onClick("pause-toggle", togglePause);
     k.onKeyRelease("p", togglePause);
+
+    k.onClick("music-toggle", () => {
+      game.music = !game.music;
+      musicToggle.frame = game.music ? 0 : 1;
+    });
+
+    k.onClick("sfx-toggle", () => {
+      game.sfx = !game.sfx;
+      sfxToggle.frame = game.sfx ? 0 : 1;
+    });
 
     // enemies
     if (debug) {
@@ -497,12 +549,19 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
       });
     });
 
+    const soundtrack = k.play("music", {
+      loop: true,
+      volume: MUSIC_VOLUME,
+    });
+
     // game state
     let volume = 0;
-    let coins = 0;
 
     // game loop
     k.loop(GAME_TICK, () => {
+      // always update, even if paused
+      soundtrack.volume = game.music ? MUSIC_VOLUME : 0;
+
       if (game.paused) {
         return;
       }
@@ -528,12 +587,6 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
       if (tryingToJump && player.isGrounded()) {
         player.jump(PLAYER_JUMP_STRENGTH);
       }
-    });
-
-    // autostart
-    k.play("music", {
-      loop: true,
-      volume: .3,
     });
   }
 }
