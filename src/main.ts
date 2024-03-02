@@ -438,6 +438,7 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
     // pause actions bar
     const sfxToggle = pauseMenu.add([
       "sfx-toggle",
+      "toggleable",
       k.opacity(1),
       k.pos(k.width() - UI_ICON_PADDING - (ICON_SCALED_SIZE * 2), UI_ICON_PADDING),
       k.anchor("topright"),
@@ -451,6 +452,7 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
 
     const musicToggle = pauseMenu.add([
       "music-toggle",
+      "toggleable",
       k.opacity(1),
       k.pos(k.width() - UI_ICON_PADDING - (ICON_SCALED_SIZE * 1), UI_ICON_PADDING),
       k.anchor("topright"),
@@ -464,6 +466,7 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
 
     const pauseToggle = pauseMenu.add([
       "pause-toggle",
+      "toggleable",
       k.opacity(1),
       k.pos(k.width() - UI_ICON_PADDING, UI_ICON_PADDING),
       k.anchor("topright"),
@@ -492,6 +495,14 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
     k.onClick("sfx-toggle", () => {
       game.sfx = !game.sfx;
       sfxToggle.frame = game.sfx ? 0 : 1;
+    });
+
+    k.onHoverEnd("toggleable", () => {
+      k.setCursor("default");
+    });
+
+    k.onHover("toggleable", () => {
+      k.setCursor("pointer");
     });
 
     // enemies
