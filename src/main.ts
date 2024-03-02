@@ -59,6 +59,16 @@ type Game = GameObj<TimerComp | {
   sfx: boolean;
 }>;
 
+export const setupDebugTools = (k: KaboomCtx) => {
+  // camera controls
+  k.onKeyDown('=', () => (k.camScale(k.camScale().scale(k.vec2(1.1)))));
+  k.onKeyDown('-', () => (k.camScale(k.camScale().scale(k.vec2(0.9)))));
+  k.onKeyDown('[', () => (k.debug.timeScale = k.debug.timeScale * 1.1));
+  k.onKeyDown(']', () => (k.debug.timeScale = k.debug.timeScale * 0.9));
+  k.onKeyDown('0', () => (k.camScale(k.vec2(1))));
+  k.onKeyDown('p', () => (k.debug.paused = !k.debug.paused));
+}
+
 export const randPitch = (k: KaboomCtx) => ({
   detune: k.randi(0, 12) * 100,
 });
@@ -304,6 +314,10 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
         sfx: true,
       }
     ]);
+
+    if (debug) {
+      setupDebugTools(k);
+    }
 
     // boundaries
     const floor = game.add([
@@ -750,17 +764,6 @@ const main = async ({ debug = true }) => {
   // game configs
   k.setGravity(GAME_GRAVITY);
   k.debug.inspect = debug;
-
-  // debug tools
-  if (debug) {
-    // camera controls
-    k.onKeyDown('=', () => (k.camScale(k.camScale().scale(k.vec2(1.1)))));
-    k.onKeyDown('-', () => (k.camScale(k.camScale().scale(k.vec2(0.9)))));
-    k.onKeyDown('[', () => (k.debug.timeScale = k.debug.timeScale * 1.1));
-    k.onKeyDown(']', () => (k.debug.timeScale = k.debug.timeScale * 0.9));
-    k.onKeyDown('0', () => (k.camScale(k.vec2(1))));
-    k.onKeyDown('p', () => (k.debug.paused = !k.debug.paused))
-  }
   
   // modules
   const microphone = await Microphone();
