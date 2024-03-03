@@ -643,20 +643,43 @@ const makeStartScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = 
   }
 }
 
-const makeGameoverScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = false) => {
-  return () => {
+const makeGameoverScene = (
+  k: KaboomCtx,
+  microphone: IMicrophone,
+  debug: boolean = false
+) => () => {
+  k.add([
+    k.text('Game over!', {
+      align: "center",
+      letterSpacing: 8,
+    }),
+    k.opacity(1),
+    k.fadeIn(1),
+    k.pos(k.width() / 2, k.height() / 2),
+    k.anchor("bot")
+  ]);
+  k.wait(1.5, () => {
     k.add([
-      k.text('Game over!', {
+      "button",
+      "retry-button",
+      k.text("Retry", {
         align: "center",
-        letterSpacing: 8,
+        size: 24
       }),
-      k.opacity(1),
-      k.fadeIn(1),
-      k.pos(k.width() / 2, k.height() / 2),
-      k.anchor("center")
+      k.area(),
+      k.pos(k.width() / 2, k.height() / 2 + 16),
+      k.anchor("top")
     ]);
-    // TODO: retry button
-  }
+  });
+  k.onClick("retry-button", () => {
+    k.go("game");
+  });
+  k.onHoverEnd("button", () => {
+    k.setCursor("default");
+  });
+  k.onHover("button", () => {
+    k.setCursor("pointer");
+  });
 }
 
 const main = async ({ debug = true }) => {
@@ -772,7 +795,7 @@ const main = async ({ debug = true }) => {
   k.scene("start", makeStartScene(k, microphone, debug));
   k.scene("gameover", makeGameoverScene(k, microphone, debug));
 
-  k.go("game");
+  k.go("gameover");
 }
 
 main({
