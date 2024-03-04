@@ -8,6 +8,7 @@ const GAME_BACKGROUND = [56, 152, 255];
 const GAME_FPS = 60;
 const GAME_TICK = 1/GAME_FPS;
 const GAME_INITIAL_TIME = 5; // s
+const GAME_WIN_TIME = 6 * 60; // 6 minutes in seconds
 const FLOOR_SIZE = GAME_HEIGHT / 5;
 const BOUNDARY_SIZE = 300;
 const BOUNDARY_COLOR = [55, 37, 56];
@@ -310,7 +311,7 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
     k.timer(),
     {
       music: true,
-      sfx: true,
+      sfx: true
     }
   ]);
 
@@ -581,6 +582,8 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
 
   // game state
   let volume = 0;
+  let time = 0; // seconds
+  let lastTime = k.time();
 
   // game loop
   k.loop(GAME_TICK, () => {
@@ -588,7 +591,18 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
     soundtrack.volume = game.music ? MUSIC_VOLUME : 0;
 
     if (game.paused) {
+      // if paused still updates this
+      lastTime = k.time();
       return;
+    }
+
+    // manage timer
+    let timeDeltaLoop = k.time() - lastTime;
+    time += timeDeltaLoop;
+    lastTime = k.time();
+    
+    if (time > GAME_WIN_TIME) {
+      k.go("win");
     }
 
     // manage volume
@@ -643,11 +657,7 @@ const makeStartScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = 
   });
 }
 
-const makeGameoverScene = (
-  k: KaboomCtx,
-  microphone: IMicrophone,
-  debug: boolean = false
-) => () => {
+const makeGameoverScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = false) => () => {
   k.add([
     k.text('Game over!', {
       align: "center",
@@ -680,6 +690,19 @@ const makeGameoverScene = (
   k.onHover("button", () => {
     k.setCursor("pointer");
   });
+}
+
+const makeWinScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = false) => () => {
+  // TODO: show score and time
+  k.add([
+    k.text('You win!', {
+      align: "center",
+      letterSpacing: 8,
+    }),
+    k.opacity(1),
+    k.pos(k.width() / 2, k.height() / 2),
+    k.anchor("bot")
+  ]);
 }
 
 const main = async ({ debug = true }) => {
@@ -794,6 +817,7 @@ const main = async ({ debug = true }) => {
   k.scene("game", makeGameScene(k, microphone, debug));
   k.scene("start", makeStartScene(k, microphone, debug));
   k.scene("gameover", makeGameoverScene(k, microphone, debug));
+  k.scene("win", makeWinScene(k, microphone, debug));
 
   k.go("game");
 }
