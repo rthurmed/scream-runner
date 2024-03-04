@@ -613,6 +613,10 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
       player.jump(PLAYER_JUMP_STRENGTH);
     }
   });
+
+  k.onSceneLeave(() => {
+    soundtrack.paused = true;
+  });
 }
 
 const makeStartScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = false) => () => {
