@@ -410,6 +410,20 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
     k.color(k.Color.fromHex("#e14141"))
   ]);
 
+  // ui > time
+  const timebarBackdrop = game.add([
+    k.pos(0, 0),
+    k.rect(k.width(), 8),
+    k.color(k.Color.fromHex("#243b61"))
+  ]);
+
+  const timebar = game.add([
+    k.pos(0, 0),
+    k.rect(k.width(), 8),
+    k.color(k.Color.fromHex("#6eeeff"))
+  ])
+  
+  // ui > volume
   const darkRed = k.Color.fromHex("#7a213a");
   const red = k.Color.fromHex("#e14141");
   const orange = k.Color.fromHex("#ffbf36");
@@ -604,6 +618,8 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
     if (time > GAME_WIN_TIME) {
       k.go("win");
     }
+
+    timebar.width = k.width() * (time / GAME_WIN_TIME)
 
     // manage volume
     const rawVolume = microphone.getVolume();
