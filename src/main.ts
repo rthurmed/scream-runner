@@ -365,17 +365,34 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
   const player = addPlayer(k, game);
 
   // ui
+  // ui > life
   const uiLifeHeight = k.height() - QUARTER_SPRITE_SIZE * 2;
-  const uiCollectibleHeight = QUARTER_SPRITE_SIZE + UI_ICON_PADDING;
 
   const iconLife = game.add([
     k.sprite("heart", {
       width: SPRITE_SCALED_SIZE,
       height: SPRITE_SCALED_SIZE
     }),
-    k.pos(-QUARTER_SPRITE_SIZE + UI_ICON_PADDING, uiLifeHeight),
+    k.pos(UI_BAR_WIDTH, uiLifeHeight),
     k.anchor("left")
   ]);
+
+  const lifeBackground = game.add([
+    k.pos(UI_ICON_PADDING, k.height() - UI_ICON_PADDING),
+    k.rect(UI_BAR_WIDTH, UI_BAR_HEIGHT),
+    k.anchor("botleft"),
+    k.color(k.Color.fromHex("#7A213A"))
+  ]);
+
+  const lifeDisplay = game.add([
+    k.pos(UI_ICON_PADDING, k.height() - UI_ICON_PADDING),
+    k.rect(UI_BAR_WIDTH, UI_BAR_HEIGHT),
+    k.anchor("botleft"),
+    k.color(k.Color.fromHex("#e14141"))
+  ]);
+
+  // ui > collectibles
+  const uiCollectibleHeight = QUARTER_SPRITE_SIZE + UI_ICON_PADDING;
 
   // NOTE: hidden
   const iconCollectible = game.add([
@@ -395,20 +412,6 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
     k.pos(UI_ICON_PADDING * 3, uiCollectibleHeight),
     k.anchor("left"),
   ])
-
-  const lifeBackground = game.add([
-    k.pos(QUARTER_SPRITE_SIZE * 2.5, k.height() - UI_ICON_PADDING),
-    k.rect(UI_BAR_WIDTH, UI_BAR_HEIGHT),
-    k.anchor("botleft"),
-    k.color(k.Color.fromHex("#7A213A"))
-  ]);
-
-  const lifeDisplay = game.add([
-    k.pos(QUARTER_SPRITE_SIZE * 2.5, k.height() - UI_ICON_PADDING),
-    k.rect(UI_BAR_WIDTH, UI_BAR_HEIGHT),
-    k.anchor("botleft"),
-    k.color(k.Color.fromHex("#e14141"))
-  ]);
 
   // ui > time
   const timebarBackdrop = game.add([
