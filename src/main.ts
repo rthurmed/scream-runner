@@ -78,9 +78,10 @@ export const addPlayer = (k: KaboomCtx, game: Game) => {
   const initialPos = k.vec2(k.width() / 2, k.height() / 2 + 100 - (UI_ICON_PADDING * 4))
   const player = game.add([
     "player",
-    k.sprite("enzo", {
+    k.sprite("player", {
       width: SPRITE_SCALED_SIZE,
-      height: SPRITE_SCALED_SIZE
+      height: SPRITE_SCALED_SIZE,
+      anim: "run"
     }),
     k.opacity(1),
     k.anchor("bot"),
@@ -821,6 +822,8 @@ const main = async ({ debug = true }) => {
     },
   });
 
+  k.loadAseprite("player", "sprites/player.png", "sprites/player.json")
+
   // sounds
   k.loadSound("hurt", "sfx/hitHurt.wav");
   k.loadSound("pickup", "sfx/pickupCoin.wav");
@@ -838,7 +841,7 @@ const main = async ({ debug = true }) => {
   k.scene("gameover", makeGameoverScene(k, microphone, debug));
   k.scene("win", makeWinScene(k, microphone, debug));
 
-  k.go("game");
+  k.go("start");
 }
 
 main({
