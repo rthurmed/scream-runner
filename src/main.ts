@@ -310,6 +310,34 @@ export const addCoin = (k: KaboomCtx, game: Game) => {
   return coin;
 }
 
+export const addScrollingBackground = (k: KaboomCtx, game: Game, sprite: string, speed: number) => {
+  const backgroundWidth = BACKGROUND_WIDTH * SPRITE_SCALING;
+  const backgroundHeight = BACKGROUND_HEIGHT * SPRITE_SCALING;
+  const background = game.add([
+    "background",
+    k.pos(),
+    k.sprite(sprite, {
+      width: backgroundWidth,
+      height: backgroundHeight
+    }),
+    k.move(k.Vec2.LEFT, speed),
+    k.offscreen({
+      distance: backgroundWidth
+    })
+  ]);
+  background.add([
+    k.pos(backgroundWidth, 0),
+    k.sprite(sprite, {
+      width: backgroundWidth,
+      height: backgroundHeight
+    }),
+  ])
+  background.onExitScreen(() => {
+    background.pos.x  = 0;
+  });
+  return background;
+}
+
 const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = false) => () => {
   const game: Game = k.add([
     k.timer(),
@@ -324,25 +352,8 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
   }
 
   // background
-  const background2 = game.add([
-    "background",
-    k.sprite("background2", {
-      width: BACKGROUND_WIDTH * SPRITE_SCALING,
-      height: BACKGROUND_HEIGHT * SPRITE_SCALING,
-    }),
-    k.pos(),
-    k.move(k.Vec2.LEFT, 20)
-  ]);
-
-  const background = game.add([
-    "background",
-    k.sprite("background1", {
-      width: BACKGROUND_WIDTH * SPRITE_SCALING,
-      height: BACKGROUND_HEIGHT * SPRITE_SCALING,
-    }),
-    k.pos(),
-    k.move(k.Vec2.LEFT, 100)
-  ]);
+  addScrollingBackground(k, game, "background2", 40);
+  addScrollingBackground(k, game, "background1", 120);
 
   // boundaries
   const floor = game.add([
