@@ -883,6 +883,4 @@ const main = async ({ debug = true }) => {
   k.go("start");
 }
 
-main({
-  debug: true
-});
+export default main;
