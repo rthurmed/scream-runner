@@ -4,7 +4,8 @@ import { IMicrophone, Microphone } from "./microphone";
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 600;
 const GAME_GRAVITY = 2400;
-const GAME_BACKGROUND = [56, 152, 255];
+// const GAME_BACKGROUND = [56, 152, 255];
+const GAME_BACKGROUND = [55, 37, 56]; // dark purple
 const GAME_FPS = 60;
 const GAME_TICK = 1/GAME_FPS;
 const GAME_INITIAL_TIME = 5; // s
@@ -52,6 +53,8 @@ const ICONSHEET_SIZE = 16;
 const ICON_SCALED_SIZE = ICONSHEET_SIZE * SPRITE_SCALING;
 const QUARTER_SPRITE_SIZE = SPRITE_SCALED_SIZE/4;
 const MUSIC_VOLUME = .3;
+const BACKGROUND_WIDTH = 1152;
+const BACKGROUND_HEIGHT = 144;
 
 type SpawnPattern = 'both' | 'walking' | 'flying';
 
@@ -320,12 +323,33 @@ const makeGameScene = (k: KaboomCtx, microphone: IMicrophone, debug: boolean = f
     setupDebugTools(k);
   }
 
+  // background
+  const background2 = game.add([
+    "background",
+    k.sprite("background2", {
+      width: BACKGROUND_WIDTH * SPRITE_SCALING,
+      height: BACKGROUND_HEIGHT * SPRITE_SCALING,
+    }),
+    k.pos(),
+    k.move(k.Vec2.LEFT, 20)
+  ]);
+
+  const background = game.add([
+    "background",
+    k.sprite("background1", {
+      width: BACKGROUND_WIDTH * SPRITE_SCALING,
+      height: BACKGROUND_HEIGHT * SPRITE_SCALING,
+    }),
+    k.pos(),
+    k.move(k.Vec2.LEFT, 100)
+  ]);
+
   // boundaries
   const floor = game.add([
     "structure",
     k.pos(-BOUNDARY_SIZE, k.height() - FLOOR_SIZE),
     k.rect(k.width() + (BOUNDARY_SIZE * 2), FLOOR_SIZE),
-    k.color(k.Color.fromHex('#372538')),
+    k.opacity(0),
     k.area(),
     k.body({
       isStatic: true
@@ -822,7 +846,11 @@ const main = async ({ debug = true }) => {
     },
   });
 
-  k.loadAseprite("player", "sprites/player.png", "sprites/player.json")
+  k.loadAseprite("player", "sprites/player.png", "sprites/player.json");
+
+  // background
+  k.loadSprite("background1", "sprites/background1.png");
+  k.loadSprite("background2", "sprites/background2.png");
 
   // sounds
   k.loadSound("hurt", "sfx/hitHurt.wav");
