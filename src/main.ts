@@ -54,7 +54,7 @@ const ICON_SCALED_SIZE = ICONSHEET_SIZE * SPRITE_SCALING;
 const QUARTER_SPRITE_SIZE = SPRITE_SCALED_SIZE/4;
 const MUSIC_VOLUME = .3;
 const BACKGROUND_WIDTH = 1152;
-const BACKGROUND_HEIGHT = 144;
+const BACKGROUND_HEIGHT = 150;
 
 type SpawnPattern = 'both' | 'walking' | 'flying';
 
